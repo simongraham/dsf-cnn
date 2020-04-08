@@ -4,12 +4,6 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 
 [Link]() to the paper. <br />
 
-This repository is a work in progress and will be finalised by the end of April.
-
-<p float="center">
-  <img src="/feature_maps.gif" alt="Segmentation" width="500" />
-</p>
-
 ## Repository Structure 
 
 - `src/` contains executable files used to run the model. Further information on running the code can be found in the corresponding directory.
@@ -25,6 +19,9 @@ This repository is a work in progress and will be finalised by the end of April.
 - `process.py` is the post processing script for obtaining the final instances for segmentation. 
 - `extract_patches.py` is the patch extraction script. 
 
+<p float="left">
+  <img src="/feature_maps.gif" alt="Segmentation" width="700" />
+</p>
 
 ## Citation 
 
