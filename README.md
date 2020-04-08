@@ -20,8 +20,15 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 - `extract_patches.py` is the patch extraction script. 
 
 <p float="left">
-  <img src="/feature_maps.gif" alt="Segmentation" width="400" />
-  <img src="/feature_maps.gif" alt="Segmentation" width="400" />
+  <img src="/gifs/input.gif" alt="Segmentation" width="250" />
+  <img src="/gifs/std_feats.gif" alt="Segmentation" width="250" />
+  <img src="/gifs/std_feats2.gif" alt="Segmentation" width="250" />
+</p>
+
+<p float="left">
+  <img src="/gifs/input.gif" alt="Segmentation" width="250" />
+  <img src="/gifs/re_feats.gif" alt="Segmentation" width="250" />
+  <img src="/gifs/re_feats2.gif" alt="Segmentation" width="250" />
 </p>
 
 ## Citation 
