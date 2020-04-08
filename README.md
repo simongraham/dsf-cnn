@@ -6,8 +6,8 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 
 This repository is a work in progress and will be finalised by the end of April.
 
-<p float="left">
-  <img src="/feature_maps.gif" alt="Segmentation" width="870" />
+<p float="center">
+  <img src="/feature_maps.gif" alt="Segmentation" width="500" />
 </p>
 
 ## Repository Structure 
