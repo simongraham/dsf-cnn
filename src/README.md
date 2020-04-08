@@ -17,15 +17,15 @@ To modify the augmentation pipeline, refer to `get_train_augmentors()` in `opt/a
 
 ## Data Format
 
-For segmentation, store patches in a 4 dimensional numpy array with channels [RGB, inst]. Here, inst is the instance segmentation ground truth. I.e pixels range from 0 to N, where 0 is background and N is the number of nuclear instances for that particular image. For classification, save as a 1D array of size [(H * W * C)+1], where H, W and C refer to height, width and number of channels. The final value is the label of the image (starting from 0). 
+For segmentation, store patches in a 4 dimensional numpy array with channels [RGB, inst]. Here, inst is the instance segmentation ground truth. I.e pixels range from 0 to N, where 0 is background and N is the number of nuclear instances for that particular image. <br/> For classification, save each image patch as a 1D array of size [(H * W * C)+1], where H, W and C refer to height, width and number of channels. The final value is the label of the image (starting from 0). 
 
 ## Training
 
-To train the network, the command is: <br/>
+To train the network, the command is: <br />
 
-`python train.py --gpu='<gpu_ids>'` <br/>
+`python train.py --gpu='<gpu_ids>'` <br />
 where gpu_id denotes which GPU will be used for training. For example, if we are using GPU number 0 and 1, the command is: <br/>
-`python train.py --gpu='0,1'` <br/>
+`python train.py --gpu='0,1'` <br />
 
 Before training, set in `config.py`:
 - path to the data directories
@@ -34,8 +34,8 @@ Before training, set in `config.py`:
 
 ## Inference
 
-To generate the network predictions, the command is: <br/>
-`python infer.py --gpu='<gpu_id>' --mode='<mode>` <br/>
+To generate the network predictions, the command is: <br />
+`python infer.py --gpu='<gpu_id>' --mode='<mode>` <br />
 Currently, the inference code only supports 1 GPU. For `'<mode>`, use `'seg'` or `'class'`. Use `'class'` when processing PCam and `'seg'` when processing Kumar and CRAG.   
 
 Before running inference, set in `config.py`:
@@ -45,7 +45,7 @@ Before running inference, set in `config.py`:
 
 ## Post Processing 
 
-To obtain the final segmentation, use the command: <br/>
-`python process.py <br/>
+To obtain the final segmentation, use the command: <br />
+`python process.py` <br />
 for post-processing the network predictions. Note, this is only for segmentation networks.
 

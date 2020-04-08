@@ -35,24 +35,23 @@ class Config(object):
         self.nr_procs_train = 8 
         self.nr_procs_valid = 4 
 
-        exp_id = 'v1.7'
+        exp_id = 'v1.0'
         # loading chkpts in tensorflow, the path must not contain extra '/'
-        self.log_path = '/media/simon/Storage 1/checkpoints/rotation_exp_final' # log root path
+        self.log_path = '/media/simon/Storage 1/dsf-cnn/checkpoints/' # log root path
         self.save_dir = '%s/%s/%s_%s_%s' % (self.log_path, self.model_mode, self.filter_type, self.nr_orients, exp_id) # log file destination
 
         #### Info for running inference
         self.inf_auto_find_chkpt = False
         # path to checkpoints will be used for inference, replace accordingly
-        # self.inf_model_path  = self.save_dir + 'model-4524.index'
-        self.inf_model_path = '/media/simon/Storage 1/checkpoints/rotation_exp_final/seg_nuc/steerable_8_v1.5/model-1836.index'
+        self.inf_model_path  = self.save_dir + 'model-xxxx.index'
 
         # paths to files for inference. Note, for PCam we use the original .h5 file.
         self.inf_imgs_ext = '.tif'
         self.inf_data_list = [
-            '/media/simon/Storage 1/Data/Nuclei/kumar_consep/kumar/test/Images/'
+            '/media/simon/Storage 1/Data/Nuclei/kumar/test/Images/'
         ]
 
-        output_root = '/media/simon/Storage 2/rotation_exp/output/kumar_rotate/'
+        output_root = '/media/simon/Storage 1/output/'
         self.inf_output_dir = '%s/%s_%s/' % (output_root, self.filter_type, self.nr_orients) # log file destination
 
         if self.filter_type == 'steerable':
