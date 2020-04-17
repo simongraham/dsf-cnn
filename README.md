@@ -4,7 +4,7 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 
 [Link](https://arxiv.org/abs/2004.03037) to the paper. <br />
 
-Work is progress. Repo to be finalised by end of April. 
+**Work is progress. Repo to be finalised by end of April.**
 
 ## Repository Structure 
 
@@ -30,5 +30,13 @@ Work is progress. Repo to be finalised by end of April.
 
 If any part of this code is used, please give appropriate citation to our paper. <br>
 
+```
+@article{graham2020dense,
+  title={Dense Steerable Filter CNNs for Exploiting Rotational Symmetry in Histology Images},
+  author={Graham, Simon and Epstein, David and Rajpoot, Nasir},
+  journal={arXiv preprint arXiv:2004.03037},
+  year={2020}
+}
+```
 
 
