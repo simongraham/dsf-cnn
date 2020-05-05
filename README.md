@@ -4,7 +4,17 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 
 [Link](https://arxiv.org/abs/2004.03037) to the paper. <br />
 
-**Work is progress. Repo to be finalised by end of April.**
+**Repo to be finalised by 10th May**
+
+## Getting Started
+
+Environment instructions: 
+
+```
+conda create --name dsf-cnn python=3.6
+conda activate dsf-cnn
+pip install -r requirements.txt
+```
 
 ## Repository Structure 
 
@@ -25,7 +35,6 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
   <img src="/feature_maps.gif" alt="Segmentation" width="750" />
 </p>
 
-
 ## Citation 
 
 If any part of this code is used, please give appropriate citation to our paper. <br>
@@ -38,5 +47,6 @@ If any part of this code is used, please give appropriate citation to our paper.
   year={2020}
 }
 ```
+
 
 
