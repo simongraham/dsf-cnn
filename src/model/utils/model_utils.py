@@ -15,8 +15,6 @@ from matplotlib import cm
 from .norm_utils import *
 
 
-# TODO: assert for data format
-####
 def resize_op(x, height_factor=None, width_factor=None, size=None, 
                 interp='bicubic', data_format='channels_last'):
     """
@@ -84,9 +82,11 @@ def resize_op(x, height_factor=None, width_factor=None, size=None,
 def crop_op(x, cropping, data_format='channels_last'):
     """
     Center crop image
+
     Args:
-        cropping is the substracted portion
+        cropping: the substracted portion
     """
+
     crop_t = cropping[0] // 2
     crop_b = cropping[0] - crop_t
     crop_l = cropping[1] // 2
@@ -100,8 +100,13 @@ def crop_op(x, cropping, data_format='channels_last'):
 
 def categorical_crossentropy(output, target):
     """
-        categorical cross-entropy, accept probabilities not logit
+    categorical cross-entropy, accept probabilities not logit
+
+    Args:
+        output: 
+        target:
     """
+
     # scale preds so that the class probs of each sample sum to 1
     output /= tf.reduce_sum(output,
                             reduction_indices=len(output.get_shape()) - 1,
@@ -138,6 +143,7 @@ def dice_loss(output, target, loss_type='sorensen', axis=None, smooth=1e-3):
     ---------
     >>> dice_loss = dice_coe(outputs, y_)
     """
+
     target = tf.squeeze(tf.cast(target, tf.float32))
     output = tf.squeeze(tf.cast(output, tf.float32))
 
@@ -158,7 +164,7 @@ def dice_loss(output, target, loss_type='sorensen', axis=None, smooth=1e-3):
 
 def colorize(value, vmin=None, vmax=None, cmap=None):
     """
-    Arguments:
+    Args:
       - value: input tensor, NHWC ('channels_last')
       - vmin: the minimum value of the range used for normalization.
         (Default: value minimum)
@@ -166,6 +172,7 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
         (Default: value maximum)
       - cmap: a valid cmap named for use with matplotlib's `get_cmap`.
         (Default: 'gray')
+
     Example usage:
     ```
     output = tf.random_uniform(shape=[256, 256, 1])
@@ -173,7 +180,8 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
     tf.summary.image('output', output_color)
     ```
     
-    Returns a 3D tensor of shape [height, width, 3], uint8.
+    Returns:
+        3D tensor of shape [height, width, 3], uint8.
     """
 
     # normalize
@@ -206,6 +214,7 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
 def BNELU(x, name=None):
     """
     A shorthand of BatchNormalization + ELU.
+    
     Args:
         x (tf.Tensor): the input
         name: deprecated, don't use.

@@ -18,7 +18,7 @@ from tensorpack.utils.utils import get_rng
 
 from misc.utils import cropping_center, bounding_box
 
-####
+
 class GenInstance(ImageAugmentor):
     def __init__(self, crop_shape=None):
         super(GenInstance, self).__init__()

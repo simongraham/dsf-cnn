@@ -14,6 +14,7 @@ try: # HACK: import beyond current level, may need to restructure
 except ImportError:
     assert False, 'Fail to import config.py'
 
+
 def group_concat(x, y, nr_orients):
     shape1 = x.get_shape().as_list()
     chans1 = shape1[3]

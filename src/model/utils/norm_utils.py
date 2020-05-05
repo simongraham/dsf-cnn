@@ -19,10 +19,13 @@ from tensorpack.tfutils.collection import backup_collection, restore_collection
 from tensorpack import layer_register, VariableHolder
 from tensorpack.tfutils.varreplace import custom_getter_scope
 
+
 def rename_get_variable(mapping):
     """
     Args:
+
         mapping(dict): an old -> new mapping for variable basename. e.g. {'kernel': 'W'}
+
     Returns:
         A context where the variables are renamed.
     """
@@ -92,7 +95,7 @@ def convert_to_tflayer_args(args_names, name_mapping):
 
     return decorator
 
-__all__ = ['BatchNorm3d', 'BatchNormVec']
+__all__ = ['BatchNorm3d']
 
 
 def get_bn_variables(n_out, use_scale, use_bias, beta_init, gamma_init):
@@ -334,138 +337,4 @@ def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
             vh.gamma = gamma
         if center:
             vh.beta = beta
-    return ret
-
-    
-@layer_register()
-@convert_to_tflayer_args(
-    args_names=[],
-    name_mapping={
-        'use_bias': 'center',
-        'use_scale': 'scale',
-        'gamma_init': 'gamma_initializer',
-        'decay': 'momentum',
-        'use_local_stat': 'training'
-    })
-
-def BatchNormVec(inputs, axis=None, training=None, momentum=0.1, epsilon=1e-5,
-              center=False, scale=True,
-              beta_initializer=tf.zeros_initializer(),
-              gamma_initializer=tf.ones_initializer(),
-              virtual_batch_size=None,
-              data_format='channels_last',
-              ema_update='default',
-              sync_statistics=None,
-              internal_update=None):
-    """
-    A more powerful version of `tf.layers.batch_normalization`. It differs from
-    the offical one in the following aspects:
-    """
-    # parse training/ctx
-    ctx = get_current_tower_context()
-    if training is None:
-        training = ctx.is_training
-    training = bool(training)
-
-    # parse shapes
-    data_format = get_data_format(data_format)
-    shape = inputs.get_shape().as_list()
-    ndims = len(shape)
-    assert ndims in [2, 4], ndims
-    if sync_statistics is not None:
-        sync_statistics = sync_statistics.lower()
-    assert sync_statistics in [None, 'nccl', 'horovod'], sync_statistics
-
-    assert ema_update in ["default", "collection", "internal", "skip"]
-    if internal_update is not None:
-        log_deprecated("BatchNorm(internal_update=)", "Use ema_update='internal' instead!", "2020-01-01")
-        assert ema_update == 'default', \
-            "Do not use internal_update and ema_update together! internal_update is deprecated"
-        ema_update = "internal" if internal_update else "collection"
-    if ema_update == "default":
-        ema_update = "collection"
-    # Logic:
-    # 1. EMA update is possible only when we compute batch statistics (training=True)
-    # 2. We know that in training, non-main training tower does not need EMA
-    #    update (unless you need, e.g., inference during training on all towers)
-    #    We don't know about what to do in prediction context, so be conservative and do the update.
-    # 3. User can explicit disable update by "skip".
-    do_ema_update = training and \
-        (ctx.is_main_training_tower or not ctx.is_training) \
-        and (ema_update != "skip")
-
-    if axis is None:
-        if ndims == 2:
-            axis = 1
-        else:
-            axis = 1 if data_format == 'NCHW' else 3
-    assert axis in [1, 3], axis
-    num_chan = shape[axis]
-
-    TF_version = get_tf_version_tuple()
-
-    freeze_bn_backward = not training and ctx.is_training
-    if freeze_bn_backward:
-        assert TF_version >= (1, 4), \
-            "Fine tuning a BatchNorm model with fixed statistics needs TF>=1.4!"
-        if ctx.is_main_training_tower:  # only warn in first tower
-            log_once("Some BatchNorm layer uses moving_mean/moving_variance in training.", func='warn')
-        # Using moving_mean/moving_variance in training, which means we
-        # loaded a pre-trained BN and only fine-tuning the affine part.
-
-    do_sync_bn = (sync_statistics is not None) and training
-
-    red_axis = [0] if ndims == 2 else ([0, 2, 3] if axis == 1 else [0, 1, 2])
-
-    new_shape = None  # don't need to reshape unless ...
-    if ndims == 4 and axis == 1:
-        new_shape = [1, num_chan, 1, 1]
-    batch_mean = tf.reduce_mean(inputs, axis=red_axis)
-    batch_mean_square = tf.reduce_mean(tf.square(inputs), axis=red_axis)
-
-    batch_var = batch_mean_square - tf.square(batch_mean)
-    batch_mean_vec = batch_mean
-    batch_var_vec = batch_var
-    beta, gamma, moving_mean, moving_var = get_bn_variables(
-        num_chan, scale, center, beta_initializer, gamma_initializer)
-    if new_shape is not None:
-        batch_mean = tf.reshape(batch_mean, new_shape)
-        batch_var = tf.reshape(batch_var, new_shape)
-        # Using fused_batch_norm(is_training=False) is actually slightly faster,
-        # but hopefully this call will be JITed in the future.
-        if training:
-            xn = tf.nn.batch_normalization(
-                inputs, tf.zeros([num_chan]), batch_var,
-                tf.reshape(beta, new_shape),
-                tf.reshape(gamma, new_shape), epsilon)
-        else:
-            xn = tf.nn.batch_normalization(
-                inputs, tf.zeros([num_chan]), moving_var,
-                tf.reshape(beta, new_shape),
-                tf.reshape(gamma, new_shape), epsilon)
-    else:
-        if training:
-            xn = tf.nn.batch_normalization(
-                inputs, tf.zeros([num_chan]), batch_var,
-                beta, gamma, epsilon)
-        else:
-            xn = tf.nn.batch_normalization(
-                inputs, tf.zeros([num_chan]), moving_var,
-                beta, gamma, epsilon)
-
-    if do_ema_update:
-        ret = internal_update_bn_ema(
-            xn, tf.zeros([num_chan]), batch_var_vec, moving_mean, moving_var, momentum)
-    else:
-        ret = tf.identity(xn, name='output')
-
-    vh = ret.variables = VariableHolder(
-        moving_mean=moving_mean,
-        mean=moving_mean,  # for backward-compatibility
-        moving_variance=moving_var,
-        variance=moving_var)  # for backward-compatibility
-    if scale:
-        vh.gamma = gamma
-    if center:
-        vh.beta = beta
     return ret

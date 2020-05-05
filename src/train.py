@@ -18,11 +18,13 @@ from misc.utils import get_files
 
 from sklearn.metrics import roc_auc_score
 
+
 class StatCollector(Inferencer, Config):
     """
     Accumulate output of inference during training.
     After the inference finishes, calculate the statistics
     """
+
     def __init__(self, prefix='valid'):
         super(StatCollector, self).__init__()
         self.prefix = prefix
@@ -38,15 +40,15 @@ class StatCollector(Inferencer, Config):
         pred, true = outputs
         self.true_list.extend(true)
         self.pred_list.extend(pred)
- 
+
     def _after_inference(self):
         # ! factor this out
         def _dice(true, pred, label):
-            true = np.array(true[...,label], np.int32)            
-            pred = np.array(pred[...,label], np.int32)           
+            true = np.array(true[..., label], np.int32)
+            pred = np.array(pred[..., label], np.int32)
             inter = (pred * true).sum()
             total = (pred + true).sum()
-            return 2 * inter /  (total + 1.0e-8)
+            return 2 * inter / (total + 1.0e-8)
 
         stat_dict = {}
         pred = np.array(self.pred_list)
@@ -55,33 +57,33 @@ class StatCollector(Inferencer, Config):
         if self.model_mode == 'seg_gland':
             # Get the segmentation stats
 
-            pred = pred[...,:2]
-            true= true[...,:2]
+            pred = pred[..., :2]
+            true = true[..., :2]
 
             # Binarize the prediction
-            pred[pred>0.5] = 1.0
-            
+            pred[pred > 0.5] = 1.0
+
             stat_dict[self.prefix + '_dice_obj'] = _dice(true, pred, 0)
             stat_dict[self.prefix + '_dice_cnt'] = _dice(true, pred, 1)
-        
+
         elif self.model_mode == 'seg_nuc':
            # Get the segmentation stats
 
-            pred = pred[...,:3]
-            true= true[...,:3]
+            pred = pred[..., :3]
+            true = true[..., :3]
 
             # Binarize the prediction
-            pred[pred>0.5] = 1.0
-            
+            pred[pred > 0.5] = 1.0
+
             stat_dict[self.prefix + '_dice_np'] = _dice(true, pred, 0)
             stat_dict[self.prefix + '_dice_mk_blb'] = _dice(true, pred, 1)
             stat_dict[self.prefix + '_dice_mk_cnt'] = _dice(true, pred, 2)
-            
+
         else:
             # Get the classification stats
 
-            # Conert vector to scalar prediction
-            prob = np.squeeze(pred[...,1])
+            # Convert vector to scalar prediction
+            prob = np.squeeze(pred[..., 1])
             pred = np.argmax(pred, -1)
             pred = np.squeeze(pred)
             true = np.squeeze(true)
@@ -100,14 +102,16 @@ class StatCollector(Inferencer, Config):
 ####
 
 ###########################################
-class Trainer(Config):   
+
+
+class Trainer(Config):
     ####
     def get_datagen(self, batch_size, mode='train', view=False):
         if mode == 'train':
             augmentors = self.get_train_augmentors(
-                                            self.train_input_shape,
-                                            self.train_output_shape,
-                                            view)
+                self.train_input_shape,
+                self.train_output_shape,
+                view)
             data_files = get_files(self.train_dir, self.data_ext)
             # Different data generators for segmentation and classification
             if self.model_mode == 'seg_gland' or self.model_mode == 'seg_nuc':
@@ -117,9 +121,9 @@ class Trainer(Config):
             nr_procs = self.nr_procs_train
         else:
             augmentors = self.get_valid_augmentors(
-                                            self.train_input_shape,
-                                            self.train_output_shape,
-                                            view)
+                self.train_input_shape,
+                self.train_output_shape,
+                view)
             # Different data generators for segmentation and classification
             data_files = get_files(self.valid_dir, self.data_ext)
             if self.model_mode == 'seg_gland' or self.model_mode == 'seg_nuc':
@@ -133,20 +137,21 @@ class Trainer(Config):
         dataset = loader.DatasetSerial(data_files)
         if self.model_mode == 'seg_gland' or self.model_mode == 'seg_nuc':
             datagen = data_generator(dataset,
-                            shape_aug=augmentors[0],
-                            input_aug=augmentors[1],
-                            label_aug=augmentors[2],
-                            batch_size=batch_size,
-                            nr_procs=nr_procs)
+                                     shape_aug=augmentors[0],
+                                     input_aug=augmentors[1],
+                                     label_aug=augmentors[2],
+                                     batch_size=batch_size,
+                                     nr_procs=nr_procs)
         else:
             datagen = data_generator(dataset,
-                            shape_aug=augmentors[0],
-                            input_aug=augmentors[1],
-                            batch_size=batch_size,
-                            nr_procs=nr_procs)
+                                     shape_aug=augmentors[0],
+                                     input_aug=augmentors[1],
+                                     batch_size=batch_size,
+                                     nr_procs=nr_procs)
 
-        return datagen      
+        return datagen
     ####
+
     def view_dataset(self, mode='train'):
         assert mode == 'train' or mode == 'valid', "Invalid view mode"
         if self.model_mode == 'seg_gland' or self.model_mode == 'seg_nuc':
@@ -158,6 +163,7 @@ class Trainer(Config):
             loader.visualize(datagen, 8)
         return
     ####
+
     def run_once(self, opt, sess_init=None, save_dir=None):
         ####
         train_datagen = self.get_datagen(opt['train_batch_size'], mode='train')
@@ -169,51 +175,55 @@ class Trainer(Config):
         else:
             logger.set_logger_dir(save_dir)
 
-        ######            
+        ######
         model_flags = opt['model_flags']
         model = self.get_model()(**model_flags)
         ######
-        callbacks=[
-                ModelSaver(max_to_keep=1, keep_checkpoint_every_n_hours=None), 
+        callbacks = [
+            ModelSaver(max_to_keep=1, keep_checkpoint_every_n_hours=None),
         ]
 
         for param_name, param_info in opt['manual_parameters'].items():
             model.add_manual_variable(param_name, param_info[0])
-            callbacks.append(ScheduledHyperParamSetter(param_name, param_info[1]))
+            callbacks.append(ScheduledHyperParamSetter(
+                param_name, param_info[1]))
         # multi-GPU inference (with mandatory queue prefetch)
         infs = [StatCollector()]
         callbacks.append(DataParallelInferenceRunner(
-                                valid_datagen, infs, list(range(nr_gpus))))
+            valid_datagen, infs, list(range(nr_gpus))))
         if self.model_mode == 'seg_gland':
             callbacks.append(MaxSaver('valid_dice_obj'))
         elif self.model_mode == 'seg_nuc':
             callbacks.append(MaxSaver('valid_dice_np'))
         else:
             callbacks.append(MaxSaver('valid_auc'))
-        
+
         ######
         steps_per_epoch = train_datagen.size() // nr_gpus
 
         config = TrainConfig(
-                    model           = model,
-                    callbacks       = callbacks      ,
-                    dataflow        = train_datagen  ,
-                    steps_per_epoch = steps_per_epoch,
-                    max_epoch       = opt['nr_epochs'],
-                )
+            model=model,
+            callbacks=callbacks,
+            dataflow=train_datagen,
+            steps_per_epoch=steps_per_epoch,
+            max_epoch=opt['nr_epochs'],
+        )
         config.session_init = sess_init
 
-        launch_train_with_config(config, SyncMultiGPUTrainerParameterServer(nr_gpus))
-        tf.reset_default_graph() # remove the entire graph in case of multiple runs
+        launch_train_with_config(
+            config, SyncMultiGPUTrainerParameterServer(nr_gpus))
+        tf.reset_default_graph()  # remove the entire graph in case of multiple runs
         return
     ####
+
     def run(self):
         def get_last_chkpt_path(prev_phase_dir):
             stat_file_path = prev_phase_dir + '/stats.json'
             with open(stat_file_path) as stat_file:
                 info = json.load(stat_file)
             chkpt_list = [epoch_stat['global_step'] for epoch_stat in info]
-            last_chkpts_path = "%smodel-%d.index" % (prev_phase_dir, max(chkpt_list))
+            last_chkpts_path = "%smodel-%d.index" % (
+                prev_phase_dir, max(chkpt_list))
             return last_chkpts_path
 
         phase_opts = self.training_phase
@@ -221,13 +231,15 @@ class Trainer(Config):
         if len(phase_opts) > 1:
             for idx, opt in enumerate(phase_opts):
 
-                log_dir = '%s/%02d' % (self.save_dir, idx) 
-                if opt['pretrained_path']  == -1:
+                log_dir = '%s/%02d' % (self.save_dir, idx)
+                if opt['pretrained_path'] == -1:
                     pretrained_path = get_last_chkpt_path(prev_log_dir)
-                    init_weights = SaverRestore(pretrained_path, ignore=['learning_rate'])
-                elif opt['pretrained_path']  is not None:
+                    init_weights = SaverRestore(
+                        pretrained_path, ignore=['learning_rate'])
+                elif opt['pretrained_path'] is not None:
                     init_weights = get_model_loader(pretrained_path)
-                self.run_once(opt, sess_init=init_weights, save_dir=log_dir + '/')
+                self.run_once(opt, sess_init=init_weights,
+                              save_dir=log_dir + '/')
                 prev_log_dir = log_dir
         else:
 
@@ -238,21 +250,24 @@ class Trainer(Config):
                 elif opt['pretrained_path'] == -1:
                     log_dir_prev = '%s' % self.save_dir
                     pretrained_path = get_last_chkpt_path(log_dir_prev)
-                    init_weights = SaverRestore(pretrained_path, ignore=['learning_rate'])
+                    init_weights = SaverRestore(
+                        pretrained_path, ignore=['learning_rate'])
                 else:
                     init_weights = get_model_loader(opt['pretrained_path'])
             self.run_once(opt, sess_init=init_weights, save_dir=self.save_dir)
 
         return
     ####
-####
+
 
 ###########################################################################
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', help="comma separated list of GPU(s) to use.")
-    parser.add_argument('--view', help="view dataset, received either 'train' or 'valid' as input")
+    parser.add_argument(
+        '--view', help="view dataset, received either 'train' or 'valid' as input")
     args = parser.parse_args()
 
     trainer = Trainer()
