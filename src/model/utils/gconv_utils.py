@@ -111,9 +111,9 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
     Gets the atomic basis filters
 
     Args:
-        alpha_list: 
-        beta_list:
-        bl_list: 
+        alpha_list: list of alpha values for basis filters
+        beta_list: list of beta values for the basis filters
+        bl_list: bandlimit list to reduce aliasing of basis filters
         k_size (int): kernel size of basis filters
         eps=10**-8: epsilon used to prevent division by 0
     
@@ -158,16 +158,17 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
 ####
 
 
-def get_rot_info(nr_orients, freq_list):
+def get_rot_info(nr_orients, alpha_list):
     """ 
     Generate rotation info for phase manipulation of steerable filters.
+    Rotation is dependent onthe frequency of the filter (alpha)
 
     Args:
         nr_orients: number of filter rotations
-        freq_list:
+        alpha_list: list of alpha values that detemine the frequency
 
     Returns:
-        rot_info:
+        rot_info used to rotate steerable filters
     """
 
     # Generate rotation matrix for phase manipulation of steerable function
@@ -215,7 +216,7 @@ def GroupPool(name, x, nr_orients, pool_type='max'):
 ####
 
 
-def steerable_initializer(input_layer, nr_orients, factor=2.0, mode='FAN_IN', uniform=False,
+def steerable_initializer(nr_orients, factor=2.0, mode='FAN_IN',
                           seed=None, dtype=dtypes.float32):
     """
     Initialise complex coefficients in accordance with Weiler et al. (https://arxiv.org/pdf/1711.07289.pdf)
@@ -224,11 +225,10 @@ def steerable_initializer(input_layer, nr_orients, factor=2.0, mode='FAN_IN', un
     Args:
         input_layer:
         nr_orients: number of filter orientations
-        factor:
-        mode:
-        uniform: 
-        seed:
-        dtype:
+        factor: factor used for weight init
+        mode: 'FAN_IN' or 'FAN_OUT
+        seed: seed for weight init
+        dtype: data type
 
     Returns:
         _initializer: 
@@ -260,13 +260,14 @@ def cycle_channels(filters, shape_list):
     Perform cyclic permutation of the orientation channels for kernels on the group G.
 
     Args:
-        filters: 
-        shape_list:
+        filters: input filters
+        shape_list:  [nr_orients_out, ksize, ksize, 
+                      nr_orients_in, filters_in, filters_out]
 
     Returns:
         tensor of filters with channels permuted
     """
-    # Shape list = [nr_orients_out, K, K, nr_orients_in, filters_in, filters_out]
+ 
     nr_orients_out = shape_list[0]
     rotated_filters = [None] * nr_orients_out
     for orientation in range(nr_orients_out):
@@ -296,15 +297,16 @@ def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filte
     Cyclic permutation of channels is performed for kernels on the group G.
 
     Args:
-        w:
-        filter_type:
-        input_layer:
-        nr_orients_out:
-        basis_filters:
-        rot_info:
+        w: coefficients used to perform a linear combination of basis filters
+        filter_type: either 'steerable' or 'standard'
+        input_layer (bool): whether 1st layer convolution or not 
+        nr_orients_out: number of output filter orientations
+        basis_filters: atomic basis filters
+        rot_info: array to determine how to rotate filters
 
     Returns:
-        rot_filters:
+        rot_filters: rotated steerable basis filters, with 
+                     cyclic permutation if not the first layer
     """
 
     if filter_type == 'steerable':
@@ -376,7 +378,7 @@ def GConv2D(
         padding='SAME',
         data_format='NHWC',
         activation='bnrelu',
-        use_bias=True,
+        use_bias=False,
         bias_initializer=tf.zeros_initializer()):
     """
     Rotation equivatiant group convolution layer
@@ -384,20 +386,20 @@ def GConv2D(
     Args:
         name: variable scope name
         inputs: input tensor
-        filters_out:
+        filters_out: number of filters out (per orientation)
         kernel_size: size of kernel
-        basis_filters:
-        rot_info:
+        basis_filters: atomic basis filters
+        rot_info: array to determine how to rotate filters
         input_layer: whether the operation is the input layer (1st conv)
         strides: stride of kernel for convolution
         padding: choose either 'SAME' or 'VALID'
-        data_format:
+        data_format: either 'NHWC' or 'NCHW'
         activation: activation function to apply
         use_bias: whether to use bias
         bias_initializer: bias initialiser method
 
     Returns:
-        conv: group equivariantconvolution of input with 
+        conv: group equivariant convolution of input with 
               steerable filters and optional activation.
     """
 
@@ -422,9 +424,9 @@ def GConv2D(
 
         # init complex valued weights with the adapted He init (Weiler et al.)
         w1 = tf.get_variable(name + '_W_real', w_shape,
-                             initializer=steerable_initializer(input_layer, nr_orients_out))
+                             initializer=steerable_initializer(nr_orients_out))
         w2 = tf.get_variable(name + '_W_imag', w_shape,
-                             initializer=steerable_initializer(input_layer, nr_orients_out))
+                             initializer=steerable_initializer(nr_orients_out))
         w = tf.complex(w1, w2)
 
         # Generate filters at different orientations- also perform cyclic permutation of channels if f: G -> G

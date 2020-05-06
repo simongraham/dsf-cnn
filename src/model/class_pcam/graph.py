@@ -58,9 +58,10 @@ def g_dense_blk(name, l, ch, ksize, count, nr_orients, filter_type, basis_filter
 ####
 
 def net(name, i, basis_filter_list, rot_matrix_list, nr_orients, filter_type, is_training):
-    '''
-    Steerable group equivariant encoder
-    '''
+    """
+    Dense Steerable Filter CNN
+    """
+
     dense_basis_list = [basis_filter_list[0],basis_filter_list[1]]
     dense_rot_list = [rot_matrix_list[0], rot_matrix_list[1]]
 
