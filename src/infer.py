@@ -75,7 +75,6 @@ def get_best_chkpts(path, metric_name, comparator='>'):
                 best_value = epoch_value
                 best_chkpt = chkpt_path
     return best_chkpt, selected_stat
-
 ####
 
 

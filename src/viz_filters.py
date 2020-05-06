@@ -37,6 +37,7 @@ def get_filter_info(k_size):
         beta_list:  list of beta values
         bl_list:    used to bandlimit high frequency filters in get_basis_filters()
     """
+
     if k_size == 5:
         alpha_list = [0, 1, 2]
         beta_list = [0, 1, 2]
@@ -62,9 +63,9 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
     Gets the atomic basis filters
 
     Args:
-        alpha_list:
-        beta_list:
-        bl_list:
+        alpha_list: list of alpha values for basis filters
+        beta_list: list of beta values for the basis filters
+        bl_list: bandlimit list to reduce aliasing of basis filters
         k_size (int): kernel size of basis filters
         eps=10**-8: epsilon used to prevent division by 0
     
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     
     ksize = int(args['--ksize'])
 
-    if ksize not in [5,7,9,11]:
+    if ksize not in [5, 7, 9, 11]:
         raise Exception(
             'Select ksize to be either 5,7,9 or 11')
 

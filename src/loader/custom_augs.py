@@ -228,7 +228,9 @@ class GenInstanceMarkerMap(GenInstance):
 ####
 
 class GaussianBlur(ImageAugmentor):
-    """ Gaussian blur the image with random window size"""
+    """ 
+    Gaussian blur the image with random window size
+    """
 
     def __init__(self, max_size=3):
         """
@@ -250,7 +252,9 @@ class GaussianBlur(ImageAugmentor):
 ####
 
 class BinarizeLabel(ImageAugmentor):
-    """ Convert labels to binary maps"""
+    """ 
+    Convert labels to binary maps
+    """
 
     def __init__(self):
         super(BinarizeLabel, self).__init__()
@@ -266,7 +270,9 @@ class BinarizeLabel(ImageAugmentor):
 ####
 
 class MedianBlur(ImageAugmentor):
-    """ Median blur the image with random window size"""
+    """ 
+    Median blur the image with random window size
+    """
 
     def __init__(self, max_size=3):
         """

@@ -14,14 +14,17 @@ from skimage.morphology import remove_small_objects, watershed
 from config import Config
 
 from misc.viz_utils import visualize_instances
-from misc.utils import get_inst_centroid
 from metrics.stats_utils import remap_label
 
 ###################
 
 def process_utils(pred_map, mode):
     """
-    #TODO include module docstring
+    Performs post processing for a given image
+
+    Args:
+        pred_map: output of CNN
+        mode: choose either 'seg_gland' or 'seg_nuc'
     """
 
     if mode == 'seg_gland':
@@ -95,7 +98,8 @@ def process_utils(pred_map, mode):
 
 def process():
     """
-    #TODO include docstring
+    Performs post processing for a list of images
+
     """
 
     cfg = Config()

@@ -60,9 +60,7 @@ class DatasetSerial(RNGDataFlow, Config):
                 lab = np.reshape(lab, [1, 1, 1])
 
                 yield [img, lab]
-
 ####
-
 
 def valid_generator_seg(ds, shape_aug=None, input_aug=None,
                         label_aug=None, batch_size=16, nr_procs=1):
@@ -81,7 +79,6 @@ def valid_generator_seg(ds, shape_aug=None, input_aug=None,
     return ds
 ####
 
-
 def valid_generator_class(ds, shape_aug=None, input_aug=None,
                           batch_size=16, nr_procs=1):
     ### augment the input
@@ -94,9 +91,7 @@ def valid_generator_class(ds, shape_aug=None, input_aug=None,
     ds = BatchData(ds, batch_size, remainder=True)
     ds = CacheData(ds)  # cache all inference images
     return ds
-
 ####
-
 
 def train_generator_seg(ds, shape_aug=None, input_aug=None,
                         label_aug=None, batch_size=16, nr_procs=8):
@@ -115,7 +110,6 @@ def train_generator_seg(ds, shape_aug=None, input_aug=None,
     return ds
 ####
 
-
 def train_generator_class(ds, shape_aug=None, input_aug=None, batch_size=16, nr_procs=8):
     ### augment the input
     ds = ds if shape_aug is None else AugmentImageComponent(
@@ -127,7 +121,6 @@ def train_generator_class(ds, shape_aug=None, input_aug=None, batch_size=16, nr_
     ds = BatchDataByShape(ds, batch_size, idx=0)
     ds = PrefetchDataZMQ(ds, nr_procs)
     return ds
-
 ####
 
 
@@ -185,6 +178,3 @@ def visualize(datagen, batch_size):
                 plt.axis('off')
             plt.show()
     return
-###
-
-###########################################################################

@@ -9,17 +9,13 @@ import cv2
 import numpy as np
 
 
-def normalize(mask, dtype=np.uint8):
-    """
-    Docstring
-    """
-    return (255 * mask / np.amax(mask)).astype(dtype)
-####
-
-
 def bounding_box(img):
     """
-    Docstring
+    Get the bounding box of a binary region
+
+    Args:
+        img: input array- should contain one
+             binary object.
     """
     rows = np.any(img, axis=1)
     cols = np.any(img, axis=0)
@@ -35,8 +31,13 @@ def bounding_box(img):
 
 def cropping_center(img, crop_shape, batch=False):
     """
-    Docstring
+    Crop an array at the centre
+
+    Args:
+        img: input array
+        crop_shape: new spatial dimensions (h,w)
     """
+
     orig_shape = img.shape
     if not batch:
         h_0 = int((orig_shape[0] - crop_shape[0]) * 0.5)
@@ -52,8 +53,9 @@ def cropping_center(img, crop_shape, batch=False):
 
 def rm_n_mkdir(dir_path):
     """
-    Docstring
+    Remove, then create a new directory
     """
+
     if os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
@@ -72,19 +74,3 @@ def get_files(data_dir_list, data_ext):
         data_files.extend(files)
 
     return data_files
-####
-
-
-def get_inst_centroid(inst_map):
-    """
-    Yes
-    """
-    inst_centroid_list = []
-    inst_id_list = list(np.unique(inst_map))
-    for inst_id in inst_id_list[1:]:  # avoid 0 i.e background
-        mask = np.array(inst_map == inst_id, np.uint8)
-        inst_moment = cv2.moments(mask)
-        inst_centroid = [(inst_moment["m10"] / inst_moment["m00"]),
-                         (inst_moment["m01"] / inst_moment["m00"])]
-        inst_centroid_list.append(inst_centroid)
-    return np.array(inst_centroid_list)
