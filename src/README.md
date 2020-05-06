@@ -23,8 +23,8 @@ For segmentation, store patches in a 4 dimensional numpy array with channels [RG
 
 To train the network, the command is: <br />
 
-`python train.py --gpu='<gpu_ids>'` <br />
-where gpu_id denotes which GPU will be used for training. For example, if we are using GPU number 0 and 1, the command is: <br/>
+`python train.py --gpu=<gpu_ids>` <br />
+where gpu_id is a comma separated list which denotes which GPU(s) will be used for training. For example, if we are using GPU number 0 and 1, the command is: <br/>
 `python train.py --gpu='0,1'` <br />
 
 Before training, set in `config.py`:
@@ -35,8 +35,8 @@ Before training, set in `config.py`:
 ## Inference
 
 To generate the network predictions, the command is: <br />
-`python infer.py --gpu='<gpu_id>' --mode='<mode>` <br />
-Currently, the inference code only supports 1 GPU. For `'<mode>`, use `'seg'` or `'class'`. Use `'class'` when processing PCam and `'seg'` when processing Kumar and CRAG.   
+`python infer.py --gpu='<gpu_id>' --mode=<mode>` <br />
+Currently, the inference code only supports 1 GPU. For `<mode>`, use `'seg'` or `'class'`. Use `'class'` when processing PCam and `'seg'` when processing Kumar and CRAG.   
 
 Before running inference, set in `config.py`:
 - path where the output will be saved
