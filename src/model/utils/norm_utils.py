@@ -39,6 +39,7 @@ def rename_get_variable(mapping):
         return getter(name, *args, **kwargs)
     return custom_getter_scope(custom_getter)
 
+
 def map_common_tfargs(kwargs):
     df = kwargs.pop('data_format', None)
     if df is not None:
@@ -55,6 +56,7 @@ def map_common_tfargs(kwargs):
     if 'b_init' in kwargs:
         kwargs['bias_initializer'] = kwargs.pop('b_init')
     return kwargs
+
 
 def convert_to_tflayer_args(args_names, name_mapping):
     """
@@ -74,7 +76,8 @@ def convert_to_tflayer_args(args_names, name_mapping):
             posarg_dic = {}
             assert len(args) <= len(args_names), \
                 "Please use kwargs instead of positional args to call this model, " \
-                "except for the following arguments: {}".format(', '.join(args_names))
+                "except for the following arguments: {}".format(
+                    ', '.join(args_names))
             for pos_arg, name in zip(args, args_names):
                 posarg_dic[name] = pos_arg
 
@@ -87,13 +90,15 @@ def convert_to_tflayer_args(args_names, name_mapping):
                 else:
                     newname = name
                 ret[newname] = arg
-            ret.update(posarg_dic)  # Let pos arg overwrite kw arg, for argscope to work
+            # Let pos arg overwrite kw arg, for argscope to work
+            ret.update(posarg_dic)
 
             return func(inputs, **ret)
 
         return decorated_func
 
     return decorator
+
 
 __all__ = ['BatchNorm3d']
 
@@ -135,6 +140,7 @@ def internal_update_bn_ema(xn, batch_mean, batch_var,
     with tf.control_dependencies([update_op1, update_op2]):
         return tf.identity(xn, name='output')
 
+
 @layer_register()
 @convert_to_tflayer_args(
     args_names=[],
@@ -146,13 +152,13 @@ def internal_update_bn_ema(xn, batch_mean, batch_var,
         'use_local_stat': 'training'
     })
 def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
-              center=True, scale=True,
-              beta_initializer=tf.zeros_initializer(),
-              gamma_initializer=tf.ones_initializer(),
-              virtual_batch_size=None,
-              data_format='channels_last',
-              internal_update=False,
-              sync_statistics=None):
+                center=True, scale=True,
+                beta_initializer=tf.zeros_initializer(),
+                gamma_initializer=tf.ones_initializer(),
+                virtual_batch_size=None,
+                data_format='channels_last',
+                internal_update=False,
+                sync_statistics=None):
     """
     Almost equivalent to `tf.layers.batch_normalization`, but different (and more powerful)
     in the following:
@@ -216,7 +222,8 @@ def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
             "Fine tuning a BatchNorm model with fixed statistics is only " \
             "supported after https://github.com/tensorflow/tensorflow/pull/12580 "
         if ctx.is_main_training_tower:  # only warn in first tower
-            logger.warn("[BatchNorm] Using moving_mean/moving_variance in training.")
+            logger.warn(
+                "[BatchNorm] Using moving_mean/moving_variance in training.")
         # Using moving_mean/moving_variance in training, which means we
         # loaded a pre-trained BN and only fine-tuning the affine part.
 
@@ -238,7 +245,8 @@ def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
             else:
                 assert virtual_batch_size is None, "Feature not supported in this version of TF!"
             layer = tf.layers.BatchNormalization(**tf_args)
-            xn = layer.apply(inputs, training=training, scope=tf.get_variable_scope())
+            xn = layer.apply(inputs, training=training,
+                             scope=tf.get_variable_scope())
 
         # maintain EMA only on one GPU is OK, even in replicated mode.
         # because during training, EMA isn't used
@@ -265,7 +273,8 @@ def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
         if center:
             vh.beta = layer.beta
     else:
-        red_axis = [0] if ndims == 2 else ([0, 2, 3] if axis == 1 else [0, 1, 2])
+        red_axis = [0] if ndims == 2 else (
+            [0, 2, 3] if axis == 1 else [0, 1, 2])
         if ndims == 5:
             red_axis = [0, 2, 3, 4] if axis == 1 else [0, 1, 2, 3]
         new_shape = None  # don't need to reshape unless ...
@@ -283,7 +292,8 @@ def BatchNorm3d(inputs, axis=None, training=None, momentum=0.9, epsilon=1e-5,
                             "Apply this patch: https://github.com/tensorflow/tensorflow/pull/20360")
 
             from tensorflow.contrib.nccl.ops import gen_nccl_ops
-            shared_name = re.sub('tower[0-9]+/', '', tf.get_variable_scope().name)
+            shared_name = re.sub(
+                'tower[0-9]+/', '', tf.get_variable_scope().name)
             num_dev = ctx.total
             batch_mean = gen_nccl_ops.nccl_all_reduce(
                 input=batch_mean,

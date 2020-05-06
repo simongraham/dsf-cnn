@@ -1,4 +1,20 @@
+"""train.py 
 
+Main training script.
+
+Usage:
+  train.py [--gpu=<id>] [--view=<dset>]
+  train.py (-h | --help)
+  train.py --version
+
+Options:
+  -h --help      Show this string.
+  --version      Show version.
+  --gpu=<id>     Comma separated GPU list.  
+  --view=<dset>  View dataset- use either 'train' or 'valid'.
+"""
+
+from docopt import docopt
 import argparse
 import json
 import os
@@ -264,16 +280,22 @@ class Trainer(Config):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help="comma separated list of GPU(s) to use.")
-    parser.add_argument(
-        '--view', help="view dataset, received either 'train' or 'valid' as input")
-    args = parser.parse_args()
+
+    args = docopt(__doc__)
+    print(args)
 
     trainer = Trainer()
-    if args.view:
-        trainer.view_dataset(args.view)
+
+    if args['--view'] and args['--gpu']:
+        raise Exception(
+            'Supply only one of --view and --gpu.')
+
+    if args['--view']:
+        if args['--view'] != 'train' and args['--view'] != 'valid':
+            raise Exception(
+                'Use "train" or "valid" for --view.')
+        trainer.view_dataset(args['--view'])
     else:
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-        nr_gpus = len(args.gpu.split(','))
+        os.environ['CUDA_VISIBLE_DEVICES'] = args['--gpu']
+        nr_gpus = len(args['--gpu'].split(','))
         trainer.run()

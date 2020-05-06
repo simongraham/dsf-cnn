@@ -1,3 +1,20 @@
+"""infer.py 
+
+Main training script.
+
+Usage:
+  infer.py [--gpu=<id>] [--mode=<mode>]
+  infer.py (-h | --help)
+  infer.py --version
+
+Options:
+  -h --help      Show this string.
+  --version      Show version.
+  --gpu=<id>     Comma separated GPU list. [default: 0]     
+  --mode=<mode>  Inference mode- use either 'seg' or 'class'.
+"""
+
+from docopt import docopt
 import argparse
 import glob
 import math
@@ -70,9 +87,9 @@ class InferClass(Config):
 
         Args:
             x : input image to be segmented. It will be split into patches
-                to run the prediction upon before being assembled back   
+                to run the prediction upon before being assembled back
             tissue: tissue mask created via otsu -> only process tissue regions
-                    if it is provided         
+                    if it is provided
         """
 
         prob = predictor(x)[0]
@@ -171,9 +188,9 @@ class InferSeg(Config):
 
         Args:
             x : input image to be segmented. It will be split into patches
-                to run the prediction upon before being assembled back   
+                to run the prediction upon before being assembled back
             tissue: tissue mask created via otsu -> only process tissue regions
-                    if it is provided         
+                    if it is provided
         """
         step_size = self.infer_output_shape
         msk_size = self.infer_output_shape
@@ -296,20 +313,23 @@ class InferSeg(Config):
 
 ####
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument(
-        '--mode', help='choose infer mode- either "seg" or "class".')
-    args = parser.parse_args()
+    args = docopt(__doc__)
+    print(args)
 
-    if args.gpu:
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-    n_gpus = len(args.gpu.split(','))
+    if args['--gpu']:
+        os.environ['CUDA_VISIBLE_DEVICES'] = args['--gpu']
+        nr_gpus = len(args['--gpu'].split(','))
+    
+    if args['--mode'] is None:
+        raise Exception(
+            'Mode cannot be empty. Use either "class" or "seg".')
 
-    if args.mode == 'class':
+    if args['--mode'] == 'class':
         infer = InferClass()
-    elif args.mode == 'seg':
-        infer = InferSeg()
+    elif args['--mode'] == 'class':
+        infer = InferClass()
     else:
-        print('Mode not recognised. Use either "class" or "seg".')
+        raise Exception(
+            'Mode not recognised. Use either "class" or "seg".')
+
     infer.run()

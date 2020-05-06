@@ -1,3 +1,7 @@
+"""
+DSF-CNN for nuclear segmentation
+"""
+
 import tensorflow as tf
 
 from tensorpack import *

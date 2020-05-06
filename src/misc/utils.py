@@ -1,19 +1,26 @@
+"""
+Utils
+"""
 
 import glob
 import os
 import shutil
-
 import cv2
 import numpy as np
 
 
-
 def normalize(mask, dtype=np.uint8):
+    """
+    Docstring
+    """
     return (255 * mask / np.amax(mask)).astype(dtype)
 ####
 
 
 def bounding_box(img):
+    """
+    Docstring
+    """
     rows = np.any(img, axis=1)
     cols = np.any(img, axis=0)
     rmin, rmax = np.where(rows)[0][[0, -1]]
@@ -26,22 +33,28 @@ def bounding_box(img):
 ####
 
 
-def cropping_center(x, crop_shape, batch=False):
-    orig_shape = x.shape
+def cropping_center(img, crop_shape, batch=False):
+    """
+    Docstring
+    """
+    orig_shape = img.shape
     if not batch:
-        h0 = int((orig_shape[0] - crop_shape[0]) * 0.5)
-        w0 = int((orig_shape[1] - crop_shape[1]) * 0.5)
-        x = x[h0:h0 + crop_shape[0], w0:w0 + crop_shape[1]]
+        h_0 = int((orig_shape[0] - crop_shape[0]) * 0.5)
+        w_0 = int((orig_shape[1] - crop_shape[1]) * 0.5)
+        img = img[h_0:h_0 + crop_shape[0], w_0:w_0 + crop_shape[1]]
     else:
-        h0 = int((orig_shape[1] - crop_shape[0]) * 0.5)
-        w0 = int((orig_shape[2] - crop_shape[1]) * 0.5)
-        x = x[:, h0:h0 + crop_shape[0], w0:w0 + crop_shape[1]]
-    return x
+        h_0 = int((orig_shape[1] - crop_shape[0]) * 0.5)
+        w_0 = int((orig_shape[2] - crop_shape[1]) * 0.5)
+        img = img[:, h_0:h_0 + crop_shape[0], w_0:w_0 + crop_shape[1]]
+    return img
 ####
 
 
 def rm_n_mkdir(dir_path):
-    if (os.path.isdir(dir_path)):
+    """
+    Docstring
+    """
+    if os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
 ####
@@ -63,6 +76,9 @@ def get_files(data_dir_list, data_ext):
 
 
 def get_inst_centroid(inst_map):
+    """
+    Yes
+    """
     inst_centroid_list = []
     inst_id_list = list(np.unique(inst_map))
     for inst_id in inst_id_list[1:]:  # avoid 0 i.e background

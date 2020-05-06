@@ -1,15 +1,14 @@
+"""
+Post-processing
+"""
 
 import glob
 import os
-import argparse
+import time
 import cv2
 import numpy as np
-import math
-from scipy.ndimage import filters, measurements
-from scipy.ndimage.morphology import (binary_dilation, binary_erosion, 
-                                      binary_fill_holes,
-                                      distance_transform_cdt,
-                                      distance_transform_edt)
+from scipy.ndimage import measurements
+from scipy.ndimage.morphology import binary_fill_holes
 from skimage.morphology import remove_small_objects, watershed
 
 from config import Config
@@ -17,40 +16,38 @@ from config import Config
 from misc.viz_utils import visualize_instances
 from misc.utils import get_inst_centroid
 from metrics.stats_utils import remap_label
-import matplotlib.pyplot as plt 
-import matplotlib.cm as cm
-import time
 
 ###################
 
 def process_utils(pred_map, mode):
+    """
+    #TODO include module docstring
+    """
 
     if mode == 'seg_gland':
         pred = np.squeeze(pred_map)
 
-        blb = pred[...,0]
+        blb = pred[..., 0]
         blb = np.squeeze(blb)
-        cnt = pred[...,1]
+        cnt = pred[..., 1]
         cnt = np.squeeze(cnt)
-        cnt[cnt  > 0.5] = 1 
-        cnt[cnt <= 0.5] = 0 
+        cnt[cnt > 0.5] = 1
+        cnt[cnt <= 0.5] = 0
 
-        pred = blb - cnt 
-        pred[pred  > 0.55] = 1 
-        pred[pred <= 0.55] = 0 
+        pred = blb - cnt
+        pred[pred > 0.55] = 1
+        pred[pred <= 0.55] = 0
         k_disk1 = np.array([[0, 0, 1, 0, 0],
                             [0, 1, 1, 1, 0],
                             [1, 1, 1, 1, 1],
                             [0, 1, 1, 1, 0],
-                            [0, 0, 1, 0, 0]], np.uint8) 
+                            [0, 0, 1, 0, 0]], np.uint8)
         # ! refactor these
-        pred = binary_fill_holes(pred) 
-        pred = pred.astype('uint16') 
-        pred = cv2.morphologyEx(pred, cv2.MORPH_OPEN, k_disk1) 
+        pred = binary_fill_holes(pred)
+        pred = pred.astype('uint16')
+        pred = cv2.morphologyEx(pred, cv2.MORPH_OPEN, k_disk1)
         pred = measurements.label(pred)[0]
         pred = remove_small_objects(pred, min_size=1500)
-
-        canvas = np.zeros([pred.shape[0], pred.shape[1]])
 
         k_disk2 = np.array([
             [0, 0, 0, 0, 1, 0, 0, 0, 0],
@@ -64,40 +61,42 @@ def process_utils(pred_map, mode):
             [0, 0, 0, 0, 1, 0, 0, 0, 0],
         ], np.uint8)
 
-        pred = pred.astype('uint16') 
-        proced_pred = cv2.dilate(pred ,k_disk2,iterations = 1)
+        pred = pred.astype('uint16')
+        proced_pred = cv2.dilate(pred, k_disk2, iterations=1)
     elif mode == 'seg_nuc':
-        blb_raw = pred_map[...,0]
+        blb_raw = pred_map[..., 0]
         blb_raw = np.squeeze(blb_raw)
         blb = blb_raw.copy()
-        blb[blb >  0.5] = 1
+        blb[blb > 0.5] = 1
         blb[blb <= 0.5] = 0
         blb = measurements.label(blb)[0]
         blb = remove_small_objects(blb, min_size=10)
-        blb[blb > 0] = 1   
+        blb[blb > 0] = 1
 
-        mrk_raw = pred_map[...,1]
+        mrk_raw = pred_map[..., 1]
         mrk_raw = np.squeeze(mrk_raw)
-        cnt_raw = pred_map[...,2]
+        cnt_raw = pred_map[..., 2]
         cnt_raw = np.squeeze(cnt_raw)
         cnt = cnt_raw.copy()
-        cnt[cnt>=0.4] = 1
-        cnt[cnt<0.4] = 0
+        cnt[cnt >= 0.4] = 1
+        cnt[cnt < 0.4] = 0
         mrk = mrk_raw - cnt
-        
-        mak = mrk * blb
-        mrk[mrk  > 0.75] = 1 
-        mrk[mrk <= 0.75] = 0 
-    
+        mrk = mrk * blb
+        mrk[mrk > 0.75] = 1
+        mrk[mrk <= 0.75] = 0
+
         marker = mrk.copy()
-        marker = binary_fill_holes(marker) 
+        marker = binary_fill_holes(marker)
         marker = measurements.label(marker)[0]
         marker = remove_small_objects(marker, min_size=10)
-        proced_pred = watershed(-mrk_raw, marker, mask=blb) 
+        proced_pred = watershed(-mrk_raw, marker, mask=blb)
 
     return proced_pred
 
 def process():
+    """
+    #TODO include docstring
+    """
 
     cfg = Config()
 
@@ -105,7 +104,6 @@ def process():
 
         proc_dir = cfg.inf_output_dir + '/processed/'
         pred_dir = cfg.inf_output_dir + '/raw/'
-    
         file_list = glob.glob(pred_dir + '*.npy')
         file_list.sort() # ensure same order
 
@@ -142,10 +140,9 @@ def process():
             np.save('%s/%s' % (proc_dir, basename), pred_inst)
 
             end = time.time()
-            diff = str(round(end - start,2))
+            diff = str(round(end - start, 2))
             print('FINISH. TIME: %s' % diff)
 
 if __name__ == '__main__':
     process()
-
-
+    

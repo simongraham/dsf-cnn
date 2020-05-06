@@ -1,12 +1,13 @@
-import math
-import time
+"""
+Patch extraction script
+"""
 
+import math
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .utils import cropping_center
-
 
 
 class PatchExtractor(object):
@@ -19,7 +20,7 @@ class PatchExtractor(object):
         win_size  : a tuple of (h, w)
         step_size : a tuple of (h, w)
         debug     : flag to see how it is done
-        
+
     Return:
         a list of sub patches, each patch has dtype same as x
 
@@ -63,8 +64,8 @@ class PatchExtractor(object):
         Extracted patches without padding, only work in case win_size > step_size
         
         Note: to deal with the remaining portions which are at the boundary a.k.a
-        those which do not fit when slide left->right, top->bottom), we flip 
-        the sliding direction then extract 1 patch starting from right / bottom edge. 
+        those which do not fit when slide left->right, top->bottom), we flip
+        the sliding direction then extract 1 patch starting from right / bottom edge.
         There will be 1 additional patch extracted at the bottom-right corner
 
         Args:
@@ -115,7 +116,7 @@ class PatchExtractor(object):
 
     def __extract_mirror(self, x):
         """
-        Extracted patches with mirror padding the boundary such that the 
+        Extracted patches with mirror padding the boundary such that the
         central region of each patch is always within the orginal (non-padded)
         image while all patches' central region cover the whole orginal image
 
@@ -142,6 +143,9 @@ class PatchExtractor(object):
         return sub_patches
 
     def extract(self, x, patch_type):
+        """
+        Extract patches
+        """
         patch_type = patch_type.lower()
         self.patch_type = patch_type
         if patch_type == 'valid':
@@ -151,14 +155,12 @@ class PatchExtractor(object):
         else:
             assert False, 'Unknown Patch Type [%s]' % patch_type
         return
-#####
 
 ###########################################################################
 
 
 if __name__ == '__main__':
-    # toy example for debug
-    # 355x355, 480x480
+    # debugging
     xtractor = PatchExtractor((450, 450), (120, 120), debug=True)
     a = np.full([1200, 1200, 3], 255, np.uint8)
     xtractor.extract(a, 'mirror')

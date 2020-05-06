@@ -1,3 +1,7 @@
+"""
+DSF-CNN for tumour classification
+"""
+
 import tensorflow as tf
 
 from tensorpack import *

@@ -1,11 +1,14 @@
+"""
+Model hyperparameters
+"""
+
 import tensorflow as tf
-#### Training parameters
 
 class_pcam = {
     'train_input_shape'  : [96, 96],
-    'train_output_shape' : [ 1,  1],
+    'train_output_shape' : [1, 1],
     'infer_input_shape'  : [96, 96],
-    'infer_output_shape' : [ 1,  1],
+    'infer_output_shape' : [1, 1],
     'input_chans'  : 3,
 
     'label_names': ['Non-Tumour', 'Tumour'],
@@ -17,9 +20,10 @@ class_pcam = {
     'training_phase'    : [
         {
             'nr_epochs': 50,
-            'manual_parameters' : { 
+            'manual_parameters' : {
                 # tuple(initial value, schedule)
-                'learning_rate': (5.0e-5, [('15', 1.0e-5), ('25', 1.0e-5), ('35', 1.0e-5), ('40', 2.0e-5), ('45', 1.0e-5)]), 
+                'learning_rate': (5.0e-5, [('15', 1.0e-5), ('25', 1.0e-5),
+                                           ('35', 1.0e-5), ('40', 2.0e-5), ('45', 1.0e-5)]),
             },
             'pretrained_path'  : None, # randomly initialise weights
             'train_batch_size' : 32,
@@ -30,7 +34,7 @@ class_pcam = {
             }
         }
     ],
-    'loss_term' : {'bce' : 1}, 
+    'loss_term' : {'bce' : 1},
 
     'optimizer'           : tf.train.AdamOptimizer,
 
@@ -52,9 +56,9 @@ seg_gland = {
     'training_phase'    : [
         {
             'nr_epochs': 70,
-            'manual_parameters' : { 
+            'manual_parameters' : {
                 # tuple(initial value, schedule)
-                'learning_rate': (1.0e-3, [('15', 1.0e-4), ('50', 5.0e-5)]), 
+                'learning_rate': (1.0e-3, [('15', 1.0e-4), ('50', 5.0e-5)]),
             },
             'pretrained_path'  : None, # randomly initialise weights
             'train_batch_size' : 6,
@@ -65,7 +69,7 @@ seg_gland = {
             }
         }
     ],
-    'loss_term' : {'bce' : 1}, 
+    'loss_term' : {'bce' : 1},
 
     'optimizer'           : tf.train.AdamOptimizer,
 
@@ -87,9 +91,9 @@ seg_nuc = {
     'training_phase'    : [
         {
             'nr_epochs': 70,
-            'manual_parameters' : { 
+            'manual_parameters' : {
                 # tuple(initial value, schedule)
-                'learning_rate': (1.0e-3, [('15', 1.0e-4), ('30', 5.0e-5)]), 
+                'learning_rate': (1.0e-3, [('15', 1.0e-4), ('30', 5.0e-5)]),
             },
             'pretrained_path'  : None, # randomly initialise weights
             'train_batch_size' : 6,
@@ -100,7 +104,7 @@ seg_nuc = {
             }
         }
     ],
-    'loss_term' : {'bce' : 1, 'dice' : 1}, 
+    'loss_term' : {'bce' : 1, 'dice' : 1},
 
     'optimizer'           : tf.train.AdamOptimizer,
 

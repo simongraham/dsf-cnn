@@ -1,3 +1,7 @@
+"""
+DSF-CNN for gland segmentation
+"""
+
 import tensorflow as tf
 
 from tensorpack import *

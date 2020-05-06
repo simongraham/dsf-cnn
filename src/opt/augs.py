@@ -1,7 +1,11 @@
+"""
+Augmentation pipeline
+"""
+
 from tensorpack import imgaug
 import cv2
 from loader.custom_augs import (BinarizeLabel, GaussianBlur, MedianBlur,
-                                ElasticDeform, GenInstanceContourMap, GenInstanceMarkerMap)
+                                GenInstanceContourMap, GenInstanceMarkerMap)
 
 # refer to https://tensorpack.readthedocs.io/modules/dataflow.imgaug.html for
 # information on how to modify the augmentation parameters

@@ -1,3 +1,7 @@
+"""
+Configuration file
+"""
+
 import importlib
 import numpy as np
 import tensorflow as tf
@@ -5,7 +9,6 @@ import tensorflow as tf
 import opt.augs as augs
 
 from model.utils.gconv_utils import get_basis_filters, get_rot_info, get_basis_params
-
 
 
 class Config(object):
@@ -26,9 +29,12 @@ class Config(object):
             self.__setattr__(variable, value)
 
         self.data_ext = '.npy'
-        # list of directories containing training and validation files. Each directory contains one numpy file per image.
-        # if self.model_mode = 'seg_nuc' or 'seg_gland', data is of size [H,W,4] (RGB + instance label)
-        # # if self.mode == 'class_pcam', data is of size [(H*W*C)+1], where the final value is the class label
+        # list of directories containing training and validation files.
+        # Each directory contains one numpy file per image.
+        # if self.model_mode = 'seg_nuc' or 'seg_gland',
+        # data is of size [H,W,4] (RGB + instance label)
+        # if self.mode == 'class_pcam', data is of size [(H*W*C)+1],
+        # where the final value is the class label
         self.train_dir = [
             '/media/simon/Storage 1/Data/Nuclei/patches/kumar/train/']
         self.valid_dir = [
@@ -41,8 +47,9 @@ class Config(object):
         exp_id = 'v1.0'
         # loading chkpts in tensorflow, the path must not contain extra '/'
         self.log_path = '/media/simon/Storage 1/dsf-cnn/checkpoints/'  # log root path
-        self.save_dir = '%s/%s/%s_%s_%s' % (self.log_path, self.model_mode,
-                                            self.filter_type, self.nr_orients, exp_id)  # log file destination
+        self.save_dir = '%s/%s/%s_%s_%s' % (
+            self.log_path, self.model_mode,
+            self.filter_type, self.nr_orients, exp_id)  # log file destination
 
         #### Info for running inference
         self.inf_auto_find_chkpt = False
@@ -84,8 +91,9 @@ class Config(object):
         model_constructor = model_constructor.Graph
         return model_constructor
 
-     # refer to https://tensorpack.readthedocs.io/modules/dataflow.imgaug.html for
-    # information on how to modify the augmentation parameters. Pipeline can be modified in opt/augs.py
+     # refer to https://tensorpack.readthedocs.io/modules/dataflow.imgaug.html
+     # for information on how to modify the augmentation parameters.
+     # Pipeline can be modified in opt/augs.py
 
     def get_train_augmentors(self, input_shape, output_shape, view=False):
         return augs.get_train_augmentors(self, input_shape, output_shape, view)

@@ -34,7 +34,7 @@ def get_filter_info(k_size):
     
     Returns:
         alpha_list: list of alpha values
-        beta_list:  list of beta values 
+        beta_list:  list of beta values
         bl_list:    used to bandlimit high frequency filters in get_basis_filters()
     """
     if k_size == 5:
@@ -62,9 +62,9 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
     Gets the atomic basis filters
 
     Args:
-        alpha_list: 
+        alpha_list:
         beta_list:
-        bl_list: 
+        bl_list:
         k_size (int): kernel size of basis filters
         eps=10**-8: epsilon used to prevent division by 0
     
@@ -75,8 +75,8 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
     """
 
     filter_list_bl = []
-    alpha_list_bl  = []
-    beta_list_bl   = []
+    alpha_list_bl = []
+    beta_list_bl = []
     for alpha in alpha_list:
         for beta in beta_list:
             if np.abs(alpha) <= bl_list[beta]:
@@ -110,8 +110,8 @@ def plot_filters(filter_list, alpha_list, beta_list):
     Plot the real and imaginary parts of the basis filters.
 
     Args:
-        filter_list: list of basis filters 
-        alpha_list:  alpha of each basis filter 
+        filter_list: list of basis filters
+        alpha_list:  alpha of each basis filter
         beta_list:   beta of each basis filter
     """
 
@@ -124,19 +124,19 @@ def plot_filters(filter_list, alpha_list, beta_list):
     len_y = 10
 
     for i in range(len(filter_list)):
-            filt_real = filter_list[i].real
-            filt_imag = filter_list[i].imag
-            plt.subplot(len_x, len_y, count)
-            plt.imshow(filt_real, vmin=-1, vmax=1, cmap=cm.gist_gray)
-            plt.axis('off')
-            plt.title('Real: $alpha$= %s, $beta$= %s' %
-                      (alpha_list[i], beta_list[i]), fontsize=8)
-            plt.subplot(len_x, len_y, count+1)
-            plt.imshow(filt_imag, vmin=-1, vmax=1, cmap=cm.gist_gray)
-            plt.axis('off')
-            plt.title('Imaginary: $alpha$= %s, $beta$= %s' %
-                      (alpha_list[i], beta_list[i]), fontsize=8)
-            count += 2
+        filt_real = filter_list[i].real
+        filt_imag = filter_list[i].imag
+        plt.subplot(len_x, len_y, count)
+        plt.imshow(filt_real, vmin=-1, vmax=1, cmap=cm.gist_gray)
+        plt.axis('off')
+        plt.title('Real: $alpha$= %s, $beta$= %s' %
+                    (alpha_list[i], beta_list[i]), fontsize=8)
+        plt.subplot(len_x, len_y, count+1)
+        plt.imshow(filt_imag, vmin=-1, vmax=1, cmap=cm.gist_gray)
+        plt.axis('off')
+        plt.title('Imaginary: $alpha$= %s, $beta$= %s' %
+                    (alpha_list[i], beta_list[i]), fontsize=8)
+        count += 2
     plt.tight_layout()
     plt.show()
 
@@ -153,15 +153,7 @@ if __name__ == '__main__':
 
     info = get_filter_info(ksize)
 
-
     filter_list, alpha_list, beta_list = get_basis_filters(
         info[0], info[1], info[2], ksize)
-    
+        
     plot_filters(filter_list, alpha_list, beta_list)
-
-    
-
-
-    
-
-

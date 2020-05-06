@@ -1,3 +1,7 @@
+"""
+Group equivariant convolution utils
+"""
+
 import math
 import numpy as np
 

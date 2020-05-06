@@ -1,6 +1,8 @@
-import math
-import numpy as np
+"""
+Model utils
+"""
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import random_ops
@@ -214,7 +216,7 @@ def colorize(value, vmin=None, vmax=None, cmap=None):
 def BNELU(x, name=None):
     """
     A shorthand of BatchNormalization + ELU.
-    
+
     Args:
         x (tf.Tensor): the input
         name: deprecated, don't use.
