@@ -47,7 +47,7 @@ If any part of this code is used, please give appropriate citation to our paper.
 
 ## Authors
 
-See the list of [contributors]https://github.com/simongraham/dsf-cnn/graphs/contributors) who participated in this project.
+See the list of [contributors](https://github.com/simongraham/dsf-cnn/graphs/contributors) who participated in this project.
 
 ## License
 
