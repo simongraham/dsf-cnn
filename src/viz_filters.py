@@ -1,6 +1,6 @@
 """viz_filters.py 
 
-Generates basis filters of the form in polar coordinates:
+Visualise basis filters of the form (in polar coordinates):
 
 R_alpha(r)e^{i*alpha*phi}
 
