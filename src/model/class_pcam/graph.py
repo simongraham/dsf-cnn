@@ -5,7 +5,7 @@ DSF-CNN for tumour classification
 import tensorflow as tf
 
 from tensorpack import *
-from tensorpack.models import BatchNorm, BNReLU, Conv2D, MaxPooling, FixedUnPooling
+from tensorpack.models import BNReLU, Conv2D, MaxPooling
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 
 from model.utils.model_utils import *
@@ -141,7 +141,7 @@ class Graph(Model):
         ####
         with argscope(Conv2D, activation=tf.identity, use_bias=False, # K.he initializer
                       W_init=tf.variance_scaling_initializer(scale=2.0, mode='fan_out')), \
-                argscope([Conv2D, BatchNorm], data_format=self.data_format):
+                argscope([Conv2D], data_format=self.data_format):
 
             i = images if not self.input_norm else images / 255.0
 
