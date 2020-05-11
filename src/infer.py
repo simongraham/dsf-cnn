@@ -1,6 +1,6 @@
 """infer.py 
 
-Main training script.
+Main inference script.
 
 Usage:
   infer.py [--gpu=<id>] [--mode=<mode>]
