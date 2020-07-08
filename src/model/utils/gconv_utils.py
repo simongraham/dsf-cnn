@@ -173,12 +173,12 @@ def get_rot_info(nr_orients, alpha_list):
 
     # Generate rotation matrix for phase manipulation of steerable function
     rot_list = []
-    for i in range(len(freq_list)):
+    for i in range(len(alpha_list)):
         list_tmp = []
         for j in range(nr_orients):
             # Rotation is dependent on the frequency of the basis filter
             angle = (2*np.math.pi / nr_orients) * j
-            list_tmp.append(np.exp(-1j*freq_list[i]*angle))
+            list_tmp.append(np.exp(-1j*alpha_list[i]*angle))
         rot_list.append(list_tmp)
     rot_info = np.array(rot_list)
 
