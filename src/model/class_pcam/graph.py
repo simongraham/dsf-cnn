@@ -44,7 +44,7 @@ def g_dense_blk(name, l, ch, ksize, count, nr_orients, filter_type, basis_filter
                 else:
                     x = l
                 x = GConv2D('conv1', x, ch[0], ksize[0], nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0])
-                x = GConv2D('conv2', x, ch[1], ksize[1], nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation=False)
+                x = GConv2D('conv2', x, ch[1], ksize[1], nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation='identity')
                 ##
                 if padding == 'valid':
                     x_shape = x.get_shape().as_list()
@@ -68,22 +68,22 @@ def net(name, i, basis_filter_list, rot_matrix_list, nr_orients, filter_type, is
     with tf.variable_scope(name):
 
         c1 = GConv2D('ds_conv1', i, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], input_layer=True)
-        c2 = GConv2D('ds_conv2', c1, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation=False)
+        c2 = GConv2D('ds_conv2', c1, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation='identity')
         p1 = MaxPooling('max_pool1', c2, 2)  
         ####
         
         d1 = g_dense_blk('dense1', p1, [32,8], [5,7], 2, nr_orients, filter_type, dense_basis_list, dense_rot_list, bn_init=False)
-        c3 = GConv2D('ds_conv3', d1, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0])
+        c3 = GConv2D('ds_conv3', d1, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0], activation='identity')
         p2 = MaxPooling('max_pool2', c3, 2, padding= 'valid') 
         ####
 
         d2 = g_dense_blk('dense2', p2, [32,8], [5,7], 2, nr_orients, filter_type, dense_basis_list, dense_rot_list, bn_init=False)
-        c4 = GConv2D('ds_conv4', d2, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0])
+        c4 = GConv2D('ds_conv4', d2, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0], activation='identity')
         p3 = MaxPooling('max_pool3', c4, 2, padding= 'valid') 
         ####
 
         d3 = g_dense_blk('dense3', p3, [32,8], [5,7], 3, nr_orients, filter_type, dense_basis_list, dense_rot_list, bn_init=False)
-        c5 = GConv2D('ds_conv5', d3, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0])
+        c5 = GConv2D('ds_conv5', d3, 32, 5, nr_orients, filter_type, basis_filter_list[0], rot_matrix_list[0], activation='identity')
         p4 = MaxPooling('max_pool4', c5, 2, padding= 'valid')  
         ####
 
