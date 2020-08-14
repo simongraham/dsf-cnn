@@ -68,7 +68,7 @@ def net(name, i, basis_filter_list, rot_matrix_list, nr_orients, filter_type, is
     with tf.variable_scope(name):
 
         c1 = GConv2D('ds_conv1', i, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], input_layer=True)
-        c2 = GConv2D('ds_conv2', c1, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation=None)
+        c2 = GConv2D('ds_conv2', c1, 8, 7, nr_orients, filter_type, basis_filter_list[1], rot_matrix_list[1], activation=False)
         p1 = MaxPooling('max_pool1', c2, 2)  
         ####
         
