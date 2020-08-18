@@ -4,6 +4,8 @@ A densely connected rotation-equivariant CNN for histology image analysis. <br /
 
 [Link](https://arxiv.org/abs/2004.03037) to the paper. <br />
 
+**NEWS**: Our paper has now been published in IEEE Transactions on Medical Imaging.
+
 ## Getting Started
 
 Environment instructions: 
