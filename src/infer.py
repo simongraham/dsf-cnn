@@ -325,8 +325,8 @@ if __name__ == '__main__':
 
     if args['--mode'] == 'class':
         infer = InferClass()
-    elif args['--mode'] == 'class':
-        infer = InferClass()
+    elif args['--mode'] == 'seg':
+        infer = InferSeg()
     else:
         raise Exception(
             'Mode not recognised. Use either "class" or "seg".')
