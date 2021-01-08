@@ -30,7 +30,7 @@ from tensorpack.predict import OfflinePredictor, PredictConfig
 from tensorpack.tfutils.sessinit import get_model_loader
 
 from config import Config
-from misc.utils import rm_n_mkdir
+from misc.utils import rm_n_mkdir,cropping_center
 
 import json
 import operator
@@ -234,13 +234,13 @@ class InferSeg(Config):
             sub_patches = sub_patches[self.inf_batch_size:]
             mini_output = predictor(mini_batch)[0]
             if win_size[0] > msk_size[0]:
-                mini_output = crop_op(mini_output, (diff_h, diff_w))
+                mini_output = cropping_center(mini_output, (diff_h, diff_w))
             mini_output = np.split(mini_output, self.inf_batch_size, axis=0)
             pred_map.extend(mini_output)
         if len(sub_patches) != 0:
             mini_output = predictor(sub_patches)[0]
             if win_size[0] > msk_size[0]:
-                mini_output = crop_op(mini_output, (diff_h, diff_w))
+                mini_output = cropping_center(mini_output, (diff_h, diff_w))
             mini_output = np.split(mini_output, len(sub_patches), axis=0)
             pred_map.extend(mini_output)
 
