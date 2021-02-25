@@ -31,6 +31,7 @@ from tensorpack.tfutils.sessinit import get_model_loader
 
 from config import Config
 from misc.utils import rm_n_mkdir,cropping_center
+from model.utils.model_utils import crop_op
 
 import json
 import operator
@@ -263,7 +264,7 @@ class InferSeg(Config):
         return pred_map
 
     ####
-    def run(self, tta):
+    def run(self):
 
         if self.inf_auto_find_chkpt:
             print('-----Auto Selecting Checkpoint Basing On "%s" Through "%s" Comparison' %
