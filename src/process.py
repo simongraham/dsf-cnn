@@ -14,9 +14,10 @@ from skimage.morphology import remove_small_objects, watershed
 from config import Config
 
 from misc.viz_utils import visualize_instances
-from metrics.stats_utils import remap_label
+from misc.utils import remap_label
 
 ###################
+
 
 def process_utils(pred_map, mode):
     """
@@ -27,7 +28,7 @@ def process_utils(pred_map, mode):
         mode: choose either 'seg_gland' or 'seg_nuc'
     """
 
-    if mode == 'seg_gland':
+    if mode == "seg_gland":
         pred = np.squeeze(pred_map)
 
         blb = pred[..., 0]
@@ -40,33 +41,41 @@ def process_utils(pred_map, mode):
         pred = blb - cnt
         pred[pred > 0.55] = 1
         pred[pred <= 0.55] = 0
-        k_disk1 = np.array([[0, 0, 1, 0, 0],
-                            [0, 1, 1, 1, 0],
-                            [1, 1, 1, 1, 1],
-                            [0, 1, 1, 1, 0],
-                            [0, 0, 1, 0, 0]], np.uint8)
+        k_disk1 = np.array(
+            [
+                [0, 0, 1, 0, 0],
+                [0, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1],
+                [0, 1, 1, 1, 0],
+                [0, 0, 1, 0, 0],
+            ],
+            np.uint8,
+        )
         # ! refactor these
         pred = binary_fill_holes(pred)
-        pred = pred.astype('uint16')
+        pred = pred.astype("uint16")
         pred = cv2.morphologyEx(pred, cv2.MORPH_OPEN, k_disk1)
         pred = measurements.label(pred)[0]
         pred = remove_small_objects(pred, min_size=1500)
 
-        k_disk2 = np.array([
-            [0, 0, 0, 0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 1, 1, 1, 1, 1, 0, 0],
-            [0, 1, 1, 1, 1, 1, 1, 1, 0],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [0, 1, 1, 1, 1, 1, 1, 1, 0],
-            [0, 0, 1, 1, 1, 1, 1, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0],
-        ], np.uint8)
+        k_disk2 = np.array(
+            [
+                [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 1, 1, 1, 1, 1, 0, 0],
+                [0, 0, 0, 1, 1, 1, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0],
+            ],
+            np.uint8,
+        )
 
-        pred = pred.astype('uint16')
+        pred = pred.astype("uint16")
         proced_pred = cv2.dilate(pred, k_disk2, iterations=1)
-    elif mode == 'seg_nuc':
+    elif mode == "seg_nuc":
         blb_raw = pred_map[..., 0]
         blb_raw = np.squeeze(blb_raw)
         blb = blb_raw.copy()
@@ -96,6 +105,7 @@ def process_utils(pred_map, mode):
 
     return proced_pred
 
+
 def process():
     """
     Performs post processing for a list of images
@@ -106,28 +116,28 @@ def process():
 
     for data_dir in cfg.inf_data_list:
 
-        proc_dir = cfg.inf_output_dir + '/processed/'
-        pred_dir = cfg.inf_output_dir + '/raw/'
-        file_list = glob.glob(pred_dir + '*.npy')
-        file_list.sort() # ensure same order
+        proc_dir = cfg.inf_output_dir + "/processed/"
+        pred_dir = cfg.inf_output_dir + "/raw/"
+        file_list = glob.glob(pred_dir + "*.npy")
+        file_list.sort()  # ensure same order
 
         if not os.path.isdir(proc_dir):
             os.makedirs(proc_dir)
         for filename in file_list:
             start = time.time()
             filename = os.path.basename(filename)
-            basename = filename.split('.')[0]
+            basename = filename.split(".")[0]
 
-            test_set = basename.split('_')[0]
+            test_set = basename.split("_")[0]
             test_set = test_set[-1]
 
-            print(pred_dir, basename, end=' ', flush=True)
+            print(pred_dir, basename, end=" ", flush=True)
 
             ##
             img = cv2.imread(data_dir + basename + cfg.inf_imgs_ext)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-            pred_map = np.load(pred_dir + '/%s.npy' % basename)
+            pred_map = np.load(pred_dir + "/%s.npy" % basename)
 
             # get the instance level prediction
             pred_inst = process_utils(pred_map, cfg.model_mode)
@@ -135,18 +145,18 @@ def process():
             # ! remap label is slow - check to see whether it is needed!
             pred_inst = remap_label(pred_inst, by_size=True)
 
-
             overlaid_output = visualize_instances(pred_inst, img)
             overlaid_output = cv2.cvtColor(overlaid_output, cv2.COLOR_BGR2RGB)
-            cv2.imwrite('%s/%s.png' % (proc_dir, basename), overlaid_output)
+            cv2.imwrite("%s/%s.png" % (proc_dir, basename), overlaid_output)
 
             # save segmentation mask
-            np.save('%s/%s' % (proc_dir, basename), pred_inst)
+            np.save("%s/%s" % (proc_dir, basename), pred_inst)
 
             end = time.time()
             diff = str(round(end - start, 2))
-            print('FINISH. TIME: %s' % diff)
+            print("FINISH. TIME: %s" % diff)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     process()
-    
+
