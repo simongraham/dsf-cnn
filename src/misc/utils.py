@@ -28,9 +28,6 @@ def bounding_box(img):
     return [rmin, rmax, cmin, cmax]
 
 
-####
-
-
 def cropping_center(img, crop_shape, batch=False):
     """
     Crop an array at the centre
@@ -52,9 +49,6 @@ def cropping_center(img, crop_shape, batch=False):
     return img
 
 
-####
-
-
 def rm_n_mkdir(dir_path):
     """
     Remove, then create a new directory
@@ -63,9 +57,6 @@ def rm_n_mkdir(dir_path):
     if os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
-
-
-####
 
 
 def get_files(data_dir_list, data_ext):

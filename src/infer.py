@@ -18,6 +18,7 @@ from docopt import docopt
 import argparse
 import glob
 import math
+import time
 import os
 import sys
 from collections import deque
@@ -30,7 +31,7 @@ from tensorpack.predict import OfflinePredictor, PredictConfig
 from tensorpack.tfutils.sessinit import get_model_loader
 
 from config import Config
-from misc.utils import rm_n_mkdir,cropping_center
+from misc.utils import rm_n_mkdir, cropping_center
 from model.utils.model_utils import crop_op
 
 import json
@@ -39,8 +40,7 @@ import operator
 from sklearn.metrics import roc_auc_score
 
 
-
-def get_best_chkpts(path, metric_name, comparator='>'):
+def get_best_chkpts(path, metric_name, comparator=">"):
     """
     Return the best checkpoint according to some criteria.
     Note that it will only return valid path, so any checkpoint that has been
@@ -50,17 +50,17 @@ def get_best_chkpts(path, metric_name, comparator='>'):
     Args:
         path: directory contains all checkpoints, including the "stats.json" file
     """
-    stat_file = path + '/stats.json'
+    stat_file = path + "/stats.json"
     ops = {
-        '>': operator.gt,
-        '<': operator.lt,
+        ">": operator.gt,
+        "<": operator.lt,
     }
 
     op_func = ops[comparator]
     with open(stat_file) as f:
         info = json.load(f)
 
-    if comparator == '>':
+    if comparator == ">":
         best_value = -float("inf")
     else:
         best_value = +float("inf")
@@ -69,18 +69,15 @@ def get_best_chkpts(path, metric_name, comparator='>'):
     for epoch_stat in info:
         epoch_value = epoch_stat[metric_name]
         if op_func(epoch_value, best_value):
-            chkpt_path = "%s/model-%d.index" % (path,
-                                                epoch_stat['global_step'])
+            chkpt_path = "%s/model-%d.index" % (path, epoch_stat["global_step"])
             if os.path.isfile(chkpt_path):
                 selected_stat = epoch_stat
                 best_value = epoch_value
                 best_chkpt = chkpt_path
     return best_chkpt, selected_stat
-####
 
 
 class InferClass(Config):
-
     def __gen_prediction(self, x, predictor):
         """
         Using 'predictor' to generate the prediction of image 'x'
@@ -102,25 +99,30 @@ class InferClass(Config):
     ####
     def run(self):
         if self.inf_auto_find_chkpt:
-            print('-----Auto Selecting Checkpoint Basing On "%s" Through "%s" Comparison' %
-                  (self.inf_auto_metric, self.inf_auto_comparator))
+            print(
+                '-----Auto Selecting Checkpoint Basing On "%s" Through "%s" Comparison'
+                % (self.inf_auto_metric, self.inf_auto_comparator)
+            )
             model_path, stat = get_best_chkpts(
-                self.save_dir, self.inf_auto_metric, self.inf_auto_comparator)
-            print('Selecting: %s' % model_path)
-            print('Having Following Statistics:')
+                self.save_dir, self.inf_auto_metric, self.inf_auto_comparator
+            )
+            print("Selecting: %s" % model_path)
+            print("Having Following Statistics:")
             for key, value in stat.items():
-                print('\t%s: %s' % (key, value))
+                print("\t%s: %s" % (key, value))
         else:
             model_path = self.inf_model_path
 
         ####
         save_dir = self.inf_output_dir
-        predict_list = [['case', 'prediction']]
+        predict_list = [["case", "prediction"]]
 
         file_load_img = HDF5Matrix(
-            self.inf_data_list[0] + 'camelyonpatch_level_2_split_test_x.h5', 'x')
+            self.inf_data_list[0] + "camelyonpatch_level_2_split_test_x.h5", "x"
+        )
         file_load_lab = HDF5Matrix(
-            self.inf_data_list[0] + 'camelyonpatch_level_2_split_test_y.h5', 'y')
+            self.inf_data_list[0] + "camelyonpatch_level_2_split_test_y.h5", "y"
+        )
 
         true_list = []
         prob_list = []
@@ -131,20 +133,19 @@ class InferClass(Config):
         last_step = self.inf_batch_size * last_step
         last_batch = num_ims - last_step
         count = 0
-        for start_batch in range(0, last_step+1, self.inf_batch_size):
+        for start_batch in range(0, last_step + 1, self.inf_batch_size):
             sys.stdout.write("\rProcessed (%d/%d)" % (start_batch, num_ims))
             sys.stdout.flush()
             if start_batch != last_step:
-                img = file_load_img[start_batch:start_batch +
-                                    self.inf_batch_size]
-                img = img.astype('uint8')
+                img = file_load_img[start_batch : start_batch + self.inf_batch_size]
+                img = img.astype("uint8")
                 lab = np.squeeze(
-                    file_load_lab[start_batch:start_batch+self.inf_batch_size])
+                    file_load_lab[start_batch : start_batch + self.inf_batch_size]
+                )
             else:
-                img = file_load_img[start_batch:start_batch+last_batch]
-                img = img.astype('uint8')
-                lab = np.squeeze(
-                    file_load_lab[start_batch:start_batch+last_batch])
+                img = file_load_img[start_batch : start_batch + last_batch]
+                img = img.astype("uint8")
+                lab = np.squeeze(file_load_lab[start_batch : start_batch + last_batch])
 
             prob, pred = self.__gen_prediction(img, predictor)
 
@@ -162,26 +163,24 @@ class InferClass(Config):
         accuracy = (pred_list == true_list).sum() / np.size(true_list)
         error = (pred_list != true_list).sum() / np.size(true_list)
 
-        print('Accurcy (%): ', 100*accuracy)
-        print('Error (%): ', 100*error)
-        if self.model_mode == 'class_pcam':
+        print("Accurcy (%): ", 100 * accuracy)
+        print("Error (%): ", 100 * error)
+        if self.model_mode == "class_pcam":
             auc = roc_auc_score(true_list, prob_list)
-            print('AUC: ', auc)
+            print("AUC: ", auc)
 
         # Save predictions to csv
         rm_n_mkdir(save_dir)
         for result in predict_list:
-            predict_file = open('%s/predict.csv' % save_dir, "a")
+            predict_file = open("%s/predict.csv" % save_dir, "a")
             predict_file.write(result[0])
-            predict_file.write(',')
+            predict_file.write(",")
             predict_file.write(result[1])
             predict_file.write("\n")
             predict_file.close()
-####
 
 
 class InferSeg(Config):
-
     def __gen_prediction(self, x, predictor):
         """
         Using 'predictor' to generate the prediction of image 'x'
@@ -215,7 +214,7 @@ class InferSeg(Config):
         padl = diff_w // 2
         padr = last_w + win_size[1] - im_w
 
-        x = np.lib.pad(x, ((padt, padb), (padl, padr), (0, 0)), 'reflect')
+        x = np.lib.pad(x, ((padt, padb), (padl, padr), (0, 0)), "reflect")
 
         #### TODO: optimize this
         sub_patches = []
@@ -224,15 +223,14 @@ class InferSeg(Config):
         idx = 0
         for row in range(0, last_h, step_size[0]):
             for col in range(0, last_w, step_size[1]):
-                win = x[row:row+win_size[0],
-                        col:col+win_size[1]]
+                win = x[row : row + win_size[0], col : col + win_size[1]]
                 sub_patches.append(win)
                 idx += 1
 
         pred_map = deque()
         while len(sub_patches) > self.inf_batch_size:
-            mini_batch = sub_patches[:self.inf_batch_size]
-            sub_patches = sub_patches[self.inf_batch_size:]
+            mini_batch = sub_patches[: self.inf_batch_size]
+            sub_patches = sub_patches[self.inf_batch_size :]
             mini_output = predictor(mini_batch)[0]
             if win_size[0] > msk_size[0]:
                 mini_output = cropping_center(mini_output, (diff_h, diff_w))
@@ -252,12 +250,20 @@ class InferSeg(Config):
 
         #### Assemble back into full image
         pred_map = np.squeeze(np.array(pred_map))
+        pred_map = np.reshape(pred_map, (nr_step_h, nr_step_w) + pred_map.shape[1:])
+        pred_map = (
+            np.transpose(pred_map, [0, 2, 1, 3, 4])
+            if ch != 1
+            else np.transpose(pred_map, [0, 2, 1, 3])
+        )
         pred_map = np.reshape(
-            pred_map, (nr_step_h, nr_step_w) + pred_map.shape[1:])
-        pred_map = np.transpose(pred_map, [0, 2, 1, 3, 4]) if ch != 1 else \
-            np.transpose(pred_map, [0, 2, 1, 3])
-        pred_map = np.reshape(pred_map, (pred_map.shape[0] * pred_map.shape[1],
-                                         pred_map.shape[2] * pred_map.shape[3], ch))
+            pred_map,
+            (
+                pred_map.shape[0] * pred_map.shape[1],
+                pred_map.shape[2] * pred_map.shape[3],
+                ch,
+            ),
+        )
         # just crop back to original size
         pred_map = np.squeeze(pred_map[:im_h, :im_w])
 
@@ -267,14 +273,17 @@ class InferSeg(Config):
     def run(self):
 
         if self.inf_auto_find_chkpt:
-            print('-----Auto Selecting Checkpoint Basing On "%s" Through "%s" Comparison' %
-                  (self.inf_auto_metric, self.inf_auto_comparator))
+            print(
+                '-----Auto Selecting Checkpoint Basing On "%s" Through "%s" Comparison'
+                % (self.inf_auto_metric, self.inf_auto_comparator)
+            )
             model_path, stat = get_best_chkpts(
-                self.save_dir, self.inf_auto_metric, self.inf_auto_comparator)
-            print('Selecting: %s' % model_path)
-            print('Having Following Statistics:')
+                self.save_dir, self.inf_auto_metric, self.inf_auto_comparator
+            )
+            print("Selecting: %s" % model_path)
+            print("Having Following Statistics:")
             for key, value in stat.items():
-                print('\t%s: %s' % (key, value))
+                print("\t%s: %s" % (key, value))
         else:
             model_path = self.inf_model_path
 
@@ -284,20 +293,21 @@ class InferSeg(Config):
             session_init=get_model_loader(model_path),
             input_names=self.eval_inf_input_tensor_names,
             output_names=self.eval_inf_output_tensor_names,
-            create_graph=False)
+            create_graph=False,
+        )
         predictor = OfflinePredictor(pred_config)
 
         for data_dir in self.inf_data_list:
-            save_dir = self.inf_output_dir + '/raw/'
-            file_list = glob.glob('%s/*%s' % (data_dir, self.inf_imgs_ext))
+            save_dir = self.inf_output_dir + "/raw/"
+            file_list = glob.glob("%s/*%s" % (data_dir, self.inf_imgs_ext))
             file_list.sort()  # ensure same order
 
             rm_n_mkdir(save_dir)
             for filename in file_list:
                 start = time.time()
                 filename = os.path.basename(filename)
-                basename = filename.split('.')[0]
-                print(data_dir, basename, end=' ', flush=True)
+                basename = filename.split(".")[0]
+                print(data_dir, basename, end=" ", flush=True)
 
                 ##
                 img = cv2.imread(data_dir + filename)
@@ -305,31 +315,29 @@ class InferSeg(Config):
 
                 pred_map = self.__gen_prediction(img, predictor)
 
-                np.save('%s/%s.npy' % (save_dir, basename), [pred_map])
+                np.save("%s/%s.npy" % (save_dir, basename), [pred_map])
                 end = time.time()
-                diff = str(round(end-start, 2))
-                print('FINISH. TIME: %s' % diff)
+                diff = str(round(end - start, 2))
+                print("FINISH. TIME: %s" % diff)
 
 
 ####
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = docopt(__doc__)
     print(args)
 
-    if args['--gpu']:
-        os.environ['CUDA_VISIBLE_DEVICES'] = args['--gpu']
-        nr_gpus = len(args['--gpu'].split(','))
-    
-    if args['--mode'] is None:
-        raise Exception(
-            'Mode cannot be empty. Use either "class" or "seg".')
+    if args["--gpu"]:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args["--gpu"]
+        nr_gpus = len(args["--gpu"].split(","))
 
-    if args['--mode'] == 'class':
+    if args["--mode"] is None:
+        raise Exception('Mode cannot be empty. Use either "class" or "seg".')
+
+    if args["--mode"] == "class":
         infer = InferClass()
-    elif args['--mode'] == 'seg':
+    elif args["--mode"] == "seg":
         infer = InferSeg()
     else:
-        raise Exception(
-            'Mode not recognised. Use either "class" or "seg".')
+        raise Exception('Mode not recognised. Use either "class" or "seg".')
 
     infer.run()

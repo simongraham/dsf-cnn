@@ -12,8 +12,7 @@ from scipy import ndimage
 from scipy.ndimage import measurements
 from scipy.ndimage.filters import gaussian_filter
 from scipy.ndimage.interpolation import affine_transform, map_coordinates
-from scipy.ndimage.morphology import (distance_transform_cdt,
-                                      distance_transform_edt)
+from scipy.ndimage.morphology import distance_transform_cdt, distance_transform_edt
 from skimage import morphology as morph
 
 from tensorpack.dataflow.imgaug import ImageAugmentor
@@ -48,7 +47,6 @@ class GenInstance(ImageAugmentor):
             ann[remapped_ids > 1] = remapped_ids[remapped_ids > 1]
             current_max_id = np.amax(ann)
         return ann
-####
 
 
 class GenInstanceContourMap(GenInstance):
@@ -67,7 +65,7 @@ class GenInstanceContourMap(GenInstance):
         fixed_ann = self._fix_mirror_padding(orig_ann)
         fixed_ann = orig_ann
         # re-cropping with fixed instance id map
-        #crop_ann = cropping_center(fixed_ann, self.crop_shape)
+        # crop_ann = cropping_center(fixed_ann, self.crop_shape)
 
         # setting 1 boundary pix of each instance to background
         inner_map = np.zeros(fixed_ann.shape[:2], np.uint8)
@@ -80,26 +78,32 @@ class GenInstanceContourMap(GenInstance):
         except ValueError:
             pass
 
-        if self.mode == 'seg_gland':
-            k_disk = np.array([
-                [0, 0, 0, 0, 1, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1, 0, 0],
-                [0, 1, 1, 1, 1, 1, 1, 1, 0],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [0, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 0, 1, 1, 1, 1, 1, 0, 0],
-                [0, 0, 0, 1, 1, 1, 0, 0, 0],
-                [0, 0, 0, 0, 1, 0, 0, 0, 0],
-            ], np.uint8)
+        if self.mode == "seg_gland":
+            k_disk = np.array(
+                [
+                    [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                ],
+                np.uint8,
+            )
         else:
-            k_disk = np.array([
-                [0, 0, 1, 0, 0],
-                [0, 1, 1, 1, 0],
-                [1, 1, 1, 1, 1],
-                [0, 1, 1, 1, 0],
-                [0, 0, 1, 0, 0],
-            ], np.uint8)
+            k_disk = np.array(
+                [
+                    [0, 0, 1, 0, 0],
+                    [0, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1],
+                    [0, 1, 1, 1, 0],
+                    [0, 0, 1, 0, 0],
+                ],
+                np.uint8,
+            )
 
         for inst_id in inst_list:
             inst_map = np.array(fixed_ann == inst_id, np.uint8)
@@ -112,7 +116,6 @@ class GenInstanceContourMap(GenInstance):
         bg_map = 1 - (inner_map + contour_map)
         img = np.dstack([inner_map, contour_map, bg_map, img[..., 1:]])
         return img
-####
 
 
 class GenInstanceMarkerMap(GenInstance):
@@ -144,15 +147,18 @@ class GenInstanceMarkerMap(GenInstance):
         inner_map = np.zeros(ann.shape[:2], np.uint8)
         contour_map = np.zeros(ann.shape[:2], np.uint8)
 
-        k = np.array([
-            [0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 1, 1, 1, 0, 0],
-            [0, 1, 1, 1, 1, 1, 0],
-            [1, 1, 1, 1, 1, 1, 1],
-            [0, 1, 1, 1, 1, 1, 0],
-            [0, 0, 1, 1, 1, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0],
-        ], np.uint8)
+        k = np.array(
+            [
+                [0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 0, 0],
+                [0, 1, 1, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1],
+                [0, 1, 1, 1, 1, 1, 0],
+                [0, 0, 1, 1, 1, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0],
+            ],
+            np.uint8,
+        )
 
         for inst_id in inst_list:
             inst_map = np.array(ann == inst_id, np.uint8)
@@ -193,7 +199,7 @@ class GenInstanceMarkerMap(GenInstance):
         #
         pix_dst = near1_dst + near2_dst
         pen_map = pix_dst / self.sigma
-        pen_map = self.w0 * np.exp(- pen_map**2 / 2)
+        pen_map = self.w0 * np.exp(-(pen_map ** 2) / 2)
         pen_map[ann > 0] = 0  # inner instances zero
         return pen_map
 
@@ -225,7 +231,7 @@ class GenInstanceMarkerMap(GenInstance):
         img = np.dstack([orig_ann_copy, inner_map, contour_map, bg_map, wmap])
 
         return img
-####
+
 
 class GaussianBlur(ImageAugmentor):
     """ 
@@ -247,9 +253,13 @@ class GaussianBlur(ImageAugmentor):
         return sx, sy
 
     def _augment(self, img, s):
-        return np.reshape(cv2.GaussianBlur(img, s, sigmaX=0, sigmaY=0,
-                                           borderType=cv2.BORDER_REPLICATE), img.shape)
-####
+        return np.reshape(
+            cv2.GaussianBlur(
+                img, s, sigmaX=0, sigmaY=0, borderType=cv2.BORDER_REPLICATE
+            ),
+            img.shape,
+        )
+
 
 class BinarizeLabel(ImageAugmentor):
     """ 
@@ -267,7 +277,7 @@ class BinarizeLabel(ImageAugmentor):
         arr = img[..., 0]
         arr[arr > 0] = 1
         return img
-####
+
 
 class MedianBlur(ImageAugmentor):
     """ 
@@ -290,4 +300,3 @@ class MedianBlur(ImageAugmentor):
 
     def _augment(self, img, ksize):
         return cv2.medianBlur(img, ksize)
-####

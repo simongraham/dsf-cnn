@@ -20,7 +20,6 @@ from model.utils.norm_utils import *
 from model.utils.rotation_utils import *
 
 
-####
 def GBNReLU(name, x, nr_orients):
     """
     A shorthand of Group Equivariant BatchNormalization + ReLU.
@@ -37,14 +36,13 @@ def GBNReLU(name, x, nr_orients):
     shape = x.get_shape().as_list()
     chans = shape[3]
 
-    c = int(chans/nr_orients)
+    c = int(chans / nr_orients)
 
     x = tf.reshape(x, [-1, shape[1], shape[2], nr_orients, c])
-    bn = BatchNorm3d(name + '_bn', x)
-    act = tf.nn.relu(bn, name='relu')
+    bn = BatchNorm3d(name + "_bn", x)
+    act = tf.nn.relu(bn, name="relu")
     out = tf.reshape(act, [-1, shape[1], shape[2], chans])
     return out
-####
 
 
 def GBatchNorm(name, x, nr_orients):
@@ -63,13 +61,12 @@ def GBatchNorm(name, x, nr_orients):
     shape = x.get_shape().as_list()
     chans = shape[3]
 
-    c = int(chans/nr_orients)
+    c = int(chans / nr_orients)
 
     x = tf.reshape(x, [-1, shape[1], shape[2], nr_orients, c])
-    bn = BatchNorm3d(name + '_bn', x)
+    bn = BatchNorm3d(name + "_bn", x)
     out = tf.reshape(act, [-1, shape[1], shape[2], chans])
     return out
-####
 
 
 def get_basis_params(k_size):
@@ -103,10 +100,9 @@ def get_basis_params(k_size):
         bl_list = [0, 3, 4, 4, 3]
 
     return alpha_list, beta_list, bl_list
-####
 
 
-def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
+def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10 ** -8):
     """
     Gets the atomic basis filters
 
@@ -128,22 +124,22 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
     for beta in beta_list:
         for alpha in alpha_list:
             if alpha <= bl_list[beta]:
-                his = k_size//2  # half image size
-                y_index, x_index = np.mgrid[-his:(his+1), -his:(his+1)]
+                his = k_size // 2  # half image size
+                y_index, x_index = np.mgrid[-his : (his + 1), -his : (his + 1)]
                 y_index *= -1
-                z_index = x_index + 1j*y_index
+                z_index = x_index + 1j * y_index
 
                 # convert z to natural coordinates and add eps to avoid division by zero
-                z = (z_index + eps)
+                z = z_index + eps
                 r = np.abs(z)
 
                 if beta == beta_list[-1]:
                     sigma = 0.4
                 else:
                     sigma = 0.6
-                rad_prof = np.exp(-(r-beta)**2/(2*(sigma**2)))
-                c_image = rad_prof * (z/r)**alpha
-                c_image_norm = (math.sqrt(2)*c_image) / np.linalg.norm(c_image)
+                rad_prof = np.exp(-((r - beta) ** 2) / (2 * (sigma ** 2)))
+                c_image = rad_prof * (z / r) ** alpha
+                c_image_norm = (math.sqrt(2) * c_image) / np.linalg.norm(c_image)
 
                 # add basis filter to list
                 filter_list.append(c_image)
@@ -152,10 +148,11 @@ def get_basis_filters(alpha_list, beta_list, bl_list, k_size, eps=10**-8):
 
     filter_array = np.array(filter_list)
 
-    filter_array = np.reshape(filter_array, [
-                              filter_array.shape[0], filter_array.shape[1], filter_array.shape[2], 1, 1, 1])
+    filter_array = np.reshape(
+        filter_array,
+        [filter_array.shape[0], filter_array.shape[1], filter_array.shape[2], 1, 1, 1],
+    )
     return tf.convert_to_tensor(filter_array, dtype=tf.complex64), freq_list
-####
 
 
 def get_rot_info(nr_orients, alpha_list):
@@ -177,20 +174,18 @@ def get_rot_info(nr_orients, alpha_list):
         list_tmp = []
         for j in range(nr_orients):
             # Rotation is dependent on the frequency of the basis filter
-            angle = (2*np.math.pi / nr_orients) * j
-            list_tmp.append(np.exp(-1j*alpha_list[i]*angle))
+            angle = (2 * np.math.pi / nr_orients) * j
+            list_tmp.append(np.exp(-1j * alpha_list[i] * angle))
         rot_list.append(list_tmp)
     rot_info = np.array(rot_list)
 
     # Reshape to enable matrix multiplication
-    rot_info = np.reshape(
-        rot_info, [rot_info.shape[0], 1, 1, 1, 1, nr_orients])
+    rot_info = np.reshape(rot_info, [rot_info.shape[0], 1, 1, 1, 1, nr_orients])
     rot_info = tf.convert_to_tensor(rot_info, dtype=tf.complex64)
     return rot_info
-####
 
 
-def GroupPool(name, x, nr_orients, pool_type='max'):
+def GroupPool(name, x, nr_orients, pool_type="max"):
     """
     Perform pooling along the orientation axis. 
 
@@ -206,18 +201,18 @@ def GroupPool(name, x, nr_orients, pool_type='max'):
     shape = x.get_shape().as_list()
     new_shape = [-1, shape[1], shape[2], nr_orients, shape[3] // nr_orients]
     x_reshape = tf.reshape(x, new_shape)
-    if pool_type == 'max':
+    if pool_type == "max":
         pool = tf.reduce_max(x_reshape, 3)
-    elif pool_type == 'mean':
+    elif pool_type == "mean":
         pool = tf.reduce_mean(x_reshape, 3)
     else:
-        raise ValueError('Pool type not recognised')
+        raise ValueError("Pool type not recognised")
     return pool
-####
 
 
-def steerable_initializer(nr_orients, factor=2.0, mode='FAN_IN',
-                          seed=None, dtype=dtypes.float32):
+def steerable_initializer(
+    nr_orients, factor=2.0, mode="FAN_IN", seed=None, dtype=dtypes.float32
+):
     """
     Initialise complex coefficients in accordance with Weiler et al. (https://arxiv.org/pdf/1711.07289.pdf)
     Note, here we use the truncated normal dist, whereas Weiler et al. uses the regular normal dist.
@@ -233,26 +228,25 @@ def steerable_initializer(nr_orients, factor=2.0, mode='FAN_IN',
     Returns:
         _initializer: 
     """
+
     def _initializer(shape, dtype=dtype, partition_info=None):
 
         # total number of basis filters
-        Q = shape[0]*shape[1]
-        if mode == 'FAN_IN':
+        Q = shape[0] * shape[1]
+        if mode == "FAN_IN":
             fan_in = shape[-2]
             C = fan_in
             # count number of input connections.
-        elif mode == 'FAN_OUT':
+        elif mode == "FAN_OUT":
             fan_out = shape[-2]
             # count number of output connections.
             C = fan_out
-        n = C*Q
+        n = C * Q
         # to get stddev = math.sqrt(factor / n) need to adjust for truncated.
-        trunc_stddev = math.sqrt(factor / n) / .87962566103423978
-        return random_ops.truncated_normal(shape, 0.0, trunc_stddev, dtype,
-                                           seed=seed)
+        trunc_stddev = math.sqrt(factor / n) / 0.87962566103423978
+        return random_ops.truncated_normal(shape, 0.0, trunc_stddev, dtype, seed=seed)
 
     return _initializer
-####
 
 
 def cycle_channels(filters, shape_list):
@@ -267,7 +261,7 @@ def cycle_channels(filters, shape_list):
     Returns:
         tensor of filters with channels permuted
     """
- 
+
     nr_orients_out = shape_list[0]
     rotated_filters = [None] * nr_orients_out
     for orientation in range(nr_orients_out):
@@ -277,21 +271,30 @@ def cycle_channels(filters, shape_list):
         filters_temp = tf.transpose(filters_temp, [0, 1, 3, 4, 2])
         # [K * K * filters_in * filters_out, nr_orients_in]
         filters_temp = tf.reshape(
-            filters_temp, [shape_list[1] * shape_list[2] * shape_list[4] * shape_list[5], shape_list[3]])
+            filters_temp,
+            [
+                shape_list[1] * shape_list[2] * shape_list[4] * shape_list[5],
+                shape_list[3],
+            ],
+        )
         # Cycle along the orientation axis
         roll_matrix = tf.constant(
-            np.roll(np.identity(shape_list[3]), orientation, axis=1), dtype=tf.float32)
+            np.roll(np.identity(shape_list[3]), orientation, axis=1), dtype=tf.float32
+        )
         filters_temp = tf.matmul(filters_temp, roll_matrix)
         filters_temp = tf.reshape(
-            filters_temp, [shape_list[1], shape_list[2], shape_list[4], shape_list[5], shape_list[3]])
+            filters_temp,
+            [shape_list[1], shape_list[2], shape_list[4], shape_list[5], shape_list[3]],
+        )
         filters_temp = tf.transpose(filters_temp, [0, 1, 4, 2, 3])
         rotated_filters[orientation] = filters_temp
 
     return tf.stack(rotated_filters)
-####
 
 
-def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filters=None, rot_info=None):
+def gen_rotated_filters(
+    w, filter_type, input_layer, nr_orients_out, basis_filters=None, rot_info=None
+):
     """
     Generate the rotated filters either by phase manipulation or direct rotation of planar filter. 
     Cyclic permutation of channels is performed for kernels on the group G.
@@ -309,7 +312,7 @@ def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filte
                      cyclic permutation if not the first layer
     """
 
-    if filter_type == 'steerable':
+    if filter_type == "steerable":
         # if using steerable filters, then rotate by phase manipulation
 
         rot_filters = [None] * nr_orients_out
@@ -325,7 +328,7 @@ def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filte
         rot_filters = tf.reduce_sum(rot_filters, axis=1)
         # Get real part of filters
         # [nr_orients_out, K, K, nr_orients_in, filters_in, filters_out]
-        rot_filters = tf.math.real(rot_filters, name='filters')
+        rot_filters = tf.math.real(rot_filters, name="filters")
 
     else:
         # if using regular kernels, rotate by sparse matrix multiplication
@@ -335,24 +338,47 @@ def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filte
 
         # Flatten the filter
         filter_flat = tf.reshape(
-            w, [filter_shape[0]*filter_shape[1], filter_shape[2]*filter_shape[3]*filter_shape[4]])
+            w,
+            [
+                filter_shape[0] * filter_shape[1],
+                filter_shape[2] * filter_shape[3] * filter_shape[4],
+            ],
+        )
 
         # Generate a set of rotated kernels via rotation matrix multiplication
         idx, vals = MultiRotationOperatorMatrixSparse(
-            [filter_shape[0], filter_shape[1]], nr_orients_out, periodicity=2*np.pi, diskMask=True)
+            [filter_shape[0], filter_shape[1]],
+            nr_orients_out,
+            periodicity=2 * np.pi,
+            diskMask=True,
+        )
 
         # Sparse rotation matrix
         rotOp_matrix = tf.SparseTensor(
-            idx, vals, [nr_orients_out*filter_shape[0]*filter_shape[1], filter_shape[0]*filter_shape[1]])
+            idx,
+            vals,
+            [
+                nr_orients_out * filter_shape[0] * filter_shape[1],
+                filter_shape[0] * filter_shape[1],
+            ],
+        )
 
         # Matrix multiplication
-        rot_filters = tf.sparse_tensor_dense_matmul(
-            rotOp_matrix, filter_flat)
-        #[nr_orients_out * K * K, filters_in * filters_out]
+        rot_filters = tf.sparse_tensor_dense_matmul(rotOp_matrix, filter_flat)
+        # [nr_orients_out * K * K, filters_in * filters_out]
 
         # Reshape the filters to [nr_orients_out, K, K, nr_orients_in, filters_in, filters_out]
         rot_filters = tf.reshape(
-            rot_filters, [nr_orients_out, filter_shape[0], filter_shape[1], filter_shape[2], filter_shape[3], filter_shape[4]])
+            rot_filters,
+            [
+                nr_orients_out,
+                filter_shape[0],
+                filter_shape[1],
+                filter_shape[2],
+                filter_shape[3],
+                filter_shape[4],
+            ],
+        )
 
     # Do not cycle filter for input convolution f: Z2 -> G
     if input_layer is False:
@@ -361,25 +387,25 @@ def gen_rotated_filters(w, filter_type, input_layer, nr_orients_out, basis_filte
         rot_filters = cycle_channels(rot_filters, shape_list)
 
     return rot_filters
-####
 
 
 def GConv2D(
-        name,
-        inputs,
-        filters_out,
-        kernel_size,
-        nr_orients,
-        filter_type,
-        basis_filters=None,
-        rot_info=None,
-        input_layer=False,
-        strides=[1, 1, 1, 1],
-        padding='SAME',
-        data_format='NHWC',
-        activation='bnrelu',
-        use_bias=False,
-        bias_initializer=tf.zeros_initializer()):
+    name,
+    inputs,
+    filters_out,
+    kernel_size,
+    nr_orients,
+    filter_type,
+    basis_filters=None,
+    rot_info=None,
+    input_layer=False,
+    strides=[1, 1, 1, 1],
+    padding="SAME",
+    data_format="NHWC",
+    activation="bnrelu",
+    use_bias=False,
+    bias_initializer=tf.zeros_initializer(),
+):
     """
     Rotation equivatiant group convolution layer
 
@@ -403,11 +429,13 @@ def GConv2D(
               steerable filters and optional activation.
     """
 
-    if filter_type == 'steerable':
-        assert basis_filters != None and rot_info != None, 'Must provide basis filters and rotation matrix'
+    if filter_type == "steerable":
+        assert (
+            basis_filters != None and rot_info != None
+        ), "Must provide basis filters and rotation matrix"
 
     in_shape = inputs.get_shape().as_list()
-    channel_axis = 3 if data_format == 'NHWC' else 1
+    channel_axis = 3 if data_format == "NHWC" else 1
 
     if input_layer == False:
         nr_orients_in = nr_orients
@@ -417,41 +445,52 @@ def GConv2D(
 
     filters_in = int(in_shape[channel_axis] / nr_orients_in)
 
-    if filter_type == 'steerable':
+    if filter_type == "steerable":
         # shape for the filter coefficients
         nr_b_filts = basis_filters.shape[0]
         w_shape = [nr_b_filts, 1, 1, nr_orients_in, filters_in, filters_out]
 
         # init complex valued weights with the adapted He init (Weiler et al.)
-        w1 = tf.get_variable(name + '_W_real', w_shape,
-                             initializer=steerable_initializer(nr_orients_out))
-        w2 = tf.get_variable(name + '_W_imag', w_shape,
-                             initializer=steerable_initializer(nr_orients_out))
+        w1 = tf.get_variable(
+            name + "_W_real", w_shape, initializer=steerable_initializer(nr_orients_out)
+        )
+        w2 = tf.get_variable(
+            name + "_W_imag", w_shape, initializer=steerable_initializer(nr_orients_out)
+        )
         w = tf.complex(w1, w2)
 
         # Generate filters at different orientations- also perform cyclic permutation of channels if f: G -> G
         # Cyclic permutation of filters happenens for all rotation equivariant layers except for the input layer
         # [nr_orients_out, K, K, nr_orients_in, filters_in, filters_out]
         filters = gen_rotated_filters(
-            w, filter_type, input_layer, nr_orients_out, basis_filters, rot_info)
+            w, filter_type, input_layer, nr_orients_out, basis_filters, rot_info
+        )
 
     else:
-        w_shape = [kernel_size, kernel_size,
-                   nr_orients_in, filters_in, filters_out]
+        w_shape = [kernel_size, kernel_size, nr_orients_in, filters_in, filters_out]
         w = tf.get_variable(
-            name + '_W', w_shape, initializer=tf.variance_scaling_initializer(scale=2.0, mode='fan_out'))
+            name + "_W",
+            w_shape,
+            initializer=tf.variance_scaling_initializer(scale=2.0, mode="fan_out"),
+        )
 
         # Generate filters at different orientations- also perform cyclic permutation of channels if f: G -> G
         # Cyclic permutation of filters happenens for all rotation equivariant layers except for the input layer
         # [nr_orients_out, K, K, nr_orients_in, filters_in, filters_out]
-        filters = gen_rotated_filters(
-            w, filter_type, input_layer, nr_orients_out)
+        filters = gen_rotated_filters(w, filter_type, input_layer, nr_orients_out)
 
     # reshape filters for 2D convolution
     # [K, K, nr_orients_in, filters_in, nr_orients_out, filters_out]
     filters = tf.transpose(filters, [1, 2, 3, 4, 0, 5])
-    filters = tf.reshape(filters, [
-                         kernel_size, kernel_size, nr_orients_in * filters_in, nr_orients_out * filters_out])
+    filters = tf.reshape(
+        filters,
+        [
+            kernel_size,
+            kernel_size,
+            nr_orients_in * filters_in,
+            nr_orients_out * filters_out,
+        ],
+    )
 
     # perform conv with rotated filters (rehshaped so we can perform 2D convolution)
     kwargs = dict(data_format=data_format)
@@ -459,20 +498,21 @@ def GConv2D(
     if use_bias:
         # Use same bias for all orientations
         b = tf.get_variable(
-            name + '_bias', [filters_out], initializer=tf.zeros_initializer())
+            name + "_bias", [filters_out], initializer=tf.zeros_initializer()
+        )
         b = tf.stack([b] * nr_orients_out)
-        b = tf.reshape(b, [nr_orients_out*filters_out])
+        b = tf.reshape(b, [nr_orients_out * filters_out])
         conv = tf.nn.bias_add(conv, b)
 
-    if activation == 'bnrelu':
+    if activation == "bnrelu":
         # Rotation equivariant batch normalisation
         conv = GBNReLU(name, conv, nr_orients_out)
 
-    if activation == 'bn':
+    if activation == "bn":
         # Rotation equivariant batch normalisation
         conv = GBatchNorm(name, conv, nr_orients_out)
 
-    if activation == 'relu':
+    if activation == "relu":
         # Rotation equivariant batch normalisation
         conv = tf.nn.relu(conv)
 

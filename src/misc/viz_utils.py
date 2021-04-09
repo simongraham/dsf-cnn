@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from .utils import bounding_box
 
 
-####
 def random_colors(N, bright=True):
     """
     Generate random colors.
@@ -24,7 +23,6 @@ def random_colors(N, bright=True):
     colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
     random.shuffle(colors)
     return colors
-####
 
 
 def visualize_instances(mask, canvas=None):
@@ -37,8 +35,11 @@ def visualize_instances(mask, canvas=None):
 
     colour = [255, 255, 0]  # yellow
 
-    canvas = np.full((mask.shape[0], mask.shape[1]) + (3,), 200, dtype=np.uint8) \
-        if canvas is None else np.copy(canvas)
+    canvas = (
+        np.full((mask.shape[0], mask.shape[1]) + (3,), 200, dtype=np.uint8)
+        if canvas is None
+        else np.copy(canvas)
+    )
 
     insts_list = list(np.unique(mask))
     insts_list.remove(0)  # remove background
@@ -53,7 +54,8 @@ def visualize_instances(mask, canvas=None):
         inst_map_crop = inst_map[y1:y2, x1:x2]
         inst_canvas_crop = canvas[y1:y2, x1:x2]
         contours = cv2.findContours(
-            inst_map_crop, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            inst_map_crop, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
         cv2.drawContours(inst_canvas_crop, contours[0], -1, colour, 3)
         canvas[y1:y2, x1:x2] = inst_canvas_crop
 
