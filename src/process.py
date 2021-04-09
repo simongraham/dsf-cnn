@@ -16,8 +16,6 @@ from config import Config
 from misc.viz_utils import visualize_instances
 from misc.utils import remap_label
 
-###################
-
 
 def process_utils(pred_map, mode):
     """
