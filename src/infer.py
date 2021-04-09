@@ -112,6 +112,15 @@ class InferClass(Config):
                 print("\t%s: %s" % (key, value))
         else:
             model_path = self.inf_model_path
+        model_constructor = self.get_model()
+        pred_config = PredictConfig(
+            model=model_constructor(),
+            session_init=get_model_loader(model_path),
+            input_names=self.eval_inf_input_tensor_names,
+            output_names=self.eval_inf_output_tensor_names,
+            create_graph=False)
+        predictor = OfflinePredictor(pred_config)
+
 
         ####
         save_dir = self.inf_output_dir
